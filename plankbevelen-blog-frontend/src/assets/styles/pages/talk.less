@@ -1,0 +1,80 @@
+.talk {
+    position: relative;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+}
+
+.left-side {
+    flex: 1;
+    
+    .statistics-box {
+        --el-text-color-regular: var(--text-color);
+        --el-text-color-primary: var(--text-secondary);
+        --el-font-size-extra-small: 15px;
+        --el-font-size-extra-large: 26px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px var(--shadow-color);
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        transition: var(--theme-transition);
+        
+        .statistic-item {
+            text-align: center;
+            position: relative;
+            .el-statistic {
+                display: inline-flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+            
+            &:not(:last-child)::after {
+                content: '';
+                position: absolute;
+                right: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 1px;
+                height: 40px;
+                background-color: var(--border-color);
+            }
+        }
+    }
+
+    .info-box {
+        padding: 20px;
+        border-radius: 8px;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        transition: var(--theme-transition);
+
+        .box-item {
+            display: inline-block;
+            line-height: 32px;
+            .svg-icon {
+                margin-right: 10px;
+            }
+            &:not(:last-child) {
+                padding-bottom: 16px;
+            }
+            &:not(:last-child)::after {
+                content: '';
+                display: block;
+                width: 100%;
+                height: 1px;
+                background-color: var(--border-color);
+                margin: 0 auto;
+                margin-top: 16px;
+            }
+        }
+    }
+}
+
+.talk-list {
+    flex: 2;
+}

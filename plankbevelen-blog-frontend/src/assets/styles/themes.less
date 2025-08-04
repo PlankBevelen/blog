@@ -1,0 +1,74 @@
+// 主题变量定义
+:root {
+  // 亮色主题
+  --bg-color: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --text-color: #333333;
+  --text-light-color: #fff;
+  --text-secondary: #666666;
+  --text-muted: #999999;
+  --border-color: #e0e0e0;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --card-bg: #ffffff;
+  --link-color: #007bff;
+  --link-hover: #0056b3;
+  --theme-transition: all 0.3s ease;
+}
+
+// 暗色主题
+[data-theme="dark"] {
+  --bg-color: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --text-color: #e0e0e0;
+  
+  --text-light-color: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --text-muted: #888888;
+  --border-color: #404040;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --card-bg: #2d2d2d;
+  --link-color: #4dabf7;
+  --link-hover: #339af0;
+}
+
+// 全局样式应用主题变量
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: var(--theme-transition);
+}
+
+// 卡片样式
+.card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 8px var(--shadow-color);
+  transition: var(--theme-transition);
+}
+
+// 链接样式
+a {
+  color: var(--link-color);
+  transition: var(--theme-transition);
+  
+  &:hover {
+    color: var(--link-hover);
+  }
+}
+
+// 输入框样式
+input, textarea {
+  background-color: var(--bg-secondary);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  transition: var(--theme-transition);
+  
+  &:focus {
+    border-color: var(--link-color);
+  }
+}
+
+// 按钮样式
+.btn {
+  transition: var(--theme-transition);
+}
