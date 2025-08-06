@@ -120,7 +120,7 @@ class UserService {
                 success: true,
                 message: '登录成功',
                 data: {
-                    user: userInfo,
+                    userInfo: userInfo,
                     token,
                     refreshToken
                 }

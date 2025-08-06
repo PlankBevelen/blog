@@ -24,18 +24,44 @@ export const useUserStore = defineStore('user', {
     },
     actions : {
         // 初始化用户态
-        initUserState() {
+        async initUserState() {
             try {
                 const token = cookie.get('token')
                 const refreshToken = cookie.get('refreshToken')
                 const userInfo = cookie.get('userInfo')
-                //const rememberMe = cookie.get('rememberMe')
-                //const loginExpiry = cookie.get('loginExpiry')
+                const rememberMe = cookie.get('rememberMe')
+                
+                console.log('=== 用户状态初始化调试信息 ===')
+                console.log('token:', token)
+                console.log('refreshToken:', refreshToken)
+                console.log('userInfo from cookie (raw):', userInfo)
+                console.log('userInfo type:', typeof userInfo)
+                console.log('userInfo === "undefined":', userInfo === 'undefined')
+                console.log('rememberMe:', rememberMe)
+                console.log('所有cookies:', cookie.getAll())
 
-                this.isLoggedIn = !!(token && refreshToken && userInfo)
                 this.token = token || null
                 this.refreshToken = refreshToken || null
-                this.userInfo = userInfo ? JSON.parse(userInfo) : null
+                this.userInfo = (userInfo && userInfo !== 'undefined') ? JSON.parse(userInfo) : null
+                
+                // 如果有token但没有userInfo，尝试获取用户信息
+                if (token && refreshToken && !userInfo) {
+                    console.log('检测到token存在但userInfo缺失，正在获取用户信息...')
+                    const result = await this.fetchUserProfile()
+                    if (result.success) {
+                        this.isLoggedIn = true
+                        console.log('用户信息获取成功，登录状态已恢复')
+                    } else {
+                        console.log('用户信息获取失败，清除无效token')
+                        this.logout()
+                    }
+                } else {
+                    this.isLoggedIn = !!(token && refreshToken && userInfo)
+                }
+                
+                console.log('最终状态 - isLoggedIn:', this.isLoggedIn)
+                console.log('最终状态 - userInfo:', this.userInfo)
+                console.log('=== 用户状态初始化完成 ===')
                 
             } catch (error) {
                 console.error('初始化用户态失败', error)
@@ -69,14 +95,24 @@ export const useUserStore = defineStore('user', {
                     this.token = token
                     this.refreshToken = refreshToken
                     this.isLoggedIn = true
-                    
+                    console.log("登陆成功")
+                    console.log(userInfo, token, refreshToken)
                     // 保存到cookie
                     // 如果记住我，设置7天过期；否则设置1天过期（避免会话cookie在刷新时丢失）
-                    const cookieOptions = rememberMe ? { expires: 7 } : { expires: 1 }
+                    const cookieOptions = rememberMe ? 
+                        { expires: 7, sameSite: 'lax', secure: false } : 
+                        { expires: 1, sameSite: 'lax', secure: false }
                     cookie.set('token', token, cookieOptions)
                     cookie.set('refreshToken', refreshToken, cookieOptions)
                     cookie.set('userInfo', JSON.stringify(userInfo), cookieOptions)
                     cookie.set('rememberMe', rememberMe.toString(), cookieOptions)
+                    
+                    console.log('登录成功，已保存cookie:', {
+                        token: token ? '已设置' : '未设置',
+                        refreshToken: refreshToken ? '已设置' : '未设置',
+                        userInfo: userInfo ? '已设置' : '未设置',
+                        rememberMe: rememberMe.toString()
+                    })
                     
                     return { success: true, message: '登录成功' }
                 } else {
@@ -134,9 +170,13 @@ export const useUserStore = defineStore('user', {
                 const response = await http.get('/user/profile')
                 
                 if (response.data.success) {
-                    this.userInfo = response.data.data
-                    // 更新cookie中的用户信息
-                    cookie.set('userInfo', JSON.stringify(this.userInfo))
+                     this.userInfo = response.data.data
+                    // 更新cookie中的用户信息，保持原有的过期时间设置
+                    const rememberMe = cookie.get('rememberMe') === 'true'
+                    const cookieOptions = rememberMe ? 
+                        { expires: 7, sameSite: 'lax', secure: false } : 
+                        { expires: 1, sameSite: 'lax', secure: false }
+                    cookie.set('userInfo', JSON.stringify(this.userInfo), cookieOptions)
                     return { success: true, data: response.data.data }
                 } else {
                     throw new Error(response.data.message || '获取用户信息失败')
@@ -229,8 +269,12 @@ export const useUserStore = defineStore('user', {
                     this.refreshToken = response.data.data.refreshToken
                     
                     // 更新cookie
-                    cookie.set('token', this.token)
-                    cookie.set('refreshToken', this.refreshToken)
+                    if (this.token) {
+                        cookie.set('token', this.token)
+                    }
+                    if (this.refreshToken) {
+                        cookie.set('refreshToken', this.refreshToken)
+                    }
                     
                     return { success: true }
                 } else {

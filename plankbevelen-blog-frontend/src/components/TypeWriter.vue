@@ -71,7 +71,7 @@ const deleteChar = () => {
 
 const startCursorBlink = () => {
     cursorBlinkTimer = setInterval(() => {
-        isCursorVisible = !isCursorVisible;
+        isCursorVisible.value = !isCursorVisible.value;
     }, 500);
 };
 

@@ -14,20 +14,24 @@ import '@/assets/styles/base.less'
 import '@/assets/styles/common.less'
 import '@/assets/styles/themes.less'
 
-const app = createApp(App)
-const pinia = createPinia()
+async function initApp() {
+    const app = createApp(App)
+    const pinia = createPinia()
 
-app.use(pinia)
-app.use(router)
-app.use(ElementPlus)
-app.component('svg-icon', SvgIcon)
+    app.use(pinia)
+    app.use(router)
+    app.use(ElementPlus)
+    app.component('svg-icon', SvgIcon)
 
-app.mount('#app')
+    // 初始化主题
+    const themeStore = useTheme()
+    themeStore.initTheme()
 
-// 初始化主题
-const themeStore = useTheme()
-themeStore.initTheme()
+    // 初始化用户状态
+    const userStore = useUserStore()
+    await userStore.initUserState()
 
-// 初始化用户状态
-const userStore = useUserStore()
-userStore.initUserState()
+    app.mount('#app')
+}
+
+initApp()

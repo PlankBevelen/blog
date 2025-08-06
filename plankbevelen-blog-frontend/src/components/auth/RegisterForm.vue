@@ -77,7 +77,7 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { ElForm, ElMessage } from 'element-plus'
+import { ElForm, ElMessage, type FormRules } from 'element-plus'
 import { Message, Lock, Check, User } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 
@@ -129,7 +129,7 @@ const validateAgreeTerms = (rule: any, value: boolean, callback: Function) => {
 }
 
 // 表单验证规则
-const registerRules = {
+const registerRules: FormRules = {
   nickname: [
     { required: true, message: '请输入昵称', trigger: 'blur' },
     { min: 2, max: 20, message: '昵称长度在 2 到 20 个字符', trigger: 'blur' }
