@@ -35,21 +35,43 @@
             </div>
 
             <div class="talk-list">
-                <!-- <TalkCard 
-                    v-for="item in paginatedTalks" 
-                    :key="item.id" 
-                    :item="item" 
-                />
-                <div class="pagination">
-                    <el-pagination
-                        v-model:current-page="curPage"
-                        :page-size="pageSize"
-                        :total="totalCount"
-                        layout="total, prev, pager, next, jumper"
-                        @current-change="handlePageChange"
-                    >
-                    </el-pagination>
-                </div> -->
+                <div v-if="loading" class="loading">
+                    <el-skeleton v-for="n in 3" :key="n" animated>
+                        <template #template>
+                            <div class="skeleton-talk">
+                                <el-skeleton-item variant="circle" style="width: 40px; height: 40px;" />
+                                <div style="margin-left: 16px; flex: 1;">
+                                    <el-skeleton-item variant="text" style="width: 30%; margin-bottom: 8px;" />
+                                    <el-skeleton-item variant="text" style="width: 80%;" />
+                                    <el-skeleton-item variant="text" style="width: 60%;" />
+                                </div>
+                            </div>
+                        </template>
+                    </el-skeleton>
+                </div>
+                
+                <div v-else-if="talks.length === 0" class="empty-state">
+                    <svg-icon name="talk" size="4em" />
+                    <p>还没有发布任何说说</p>
+                </div>
+                
+                <div v-else class="talks-container">
+                    <TalkCard 
+                        v-for="talk in paginatedTalks" 
+                        :key="talk.id" 
+                        :talk="talk" 
+                    />
+                    
+                    <div v-if="totalCount > pageSize" class="pagination">
+                        <el-pagination
+                            v-model:current-page="curPage"
+                            :page-size="pageSize"
+                            :total="totalCount"
+                            layout="total, prev, pager, next, jumper"
+                            @current-change="handlePageChange"
+                        />
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -57,26 +79,68 @@
 
 <script setup lang="ts">
 import TopBanner from '@/components/TopBanner.vue'
+import TalkCard from '@/components/TalkCard.vue'
 import talkImage from '@/assets/images/talk.jpg'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useTransition } from '@vueuse/core'
+import TalkService from '@/services/talk.service'
+import type { TalkEntity } from '@/types/talk'
+import { ElMessage } from 'element-plus'
 
 const imagePath = talkImage;    
 const title = '说说'
 
+// 数据状态
+const loading = ref(false)
+const talks = ref<TalkEntity[]>([])
+const curPage = ref(1)
+const pageSize = ref(10)
+const totalCount = ref(0)
+
+// 统计数据
 const talkCount = ref(0)
 const outputTalkCount = useTransition(talkCount, { duration : 2 * 1000 })
 const photoCount = ref(0)
 const outputPhotoCount = useTransition(photoCount, { duration : 2 * 1000 })
-const commentCount = ref(0)
+const commentCount = ref(10)
 const outputCommentCount = useTransition(commentCount, { duration : 2 * 1000 })
 
-onMounted(()=>{
-    setTimeout(()=>{
-        talkCount.value = 201
-        photoCount.value = 101
-        commentCount.value = 201
-    })
+// 分页数据
+const paginatedTalks = computed(() => {
+  const start = (curPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return talks.value.slice(start, end)
+})
+
+// 获取已发布的说说
+const fetchPublishedTalks = async () => {
+  try {
+    loading.value = true
+    const response = await TalkService.getPublished()
+    talks.value = response.data || []
+    totalCount.value = talks.value.length
+    
+    // 更新统计数据
+    talkCount.value = talks.value.length
+    photoCount.value = talks.value.reduce((count, talk) => count + (talk.images?.length || 0), 0)
+    commentCount.value = 0 // TODO: 实际评论数
+  } catch (error) {
+    console.error('获取说说失败:', error)
+    ElMessage.error('获取说说失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 分页处理
+const handlePageChange = (page: number) => {
+  curPage.value = page
+  // 滚动到顶部
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+onMounted(() => {
+  fetchPublishedTalks()
 })
 
 </script>

@@ -23,6 +23,7 @@ const router = createRouter({
         },
         {
           path: '/login',
+          name: 'Login',
           component: () => import('@/pages/LoginView.vue')
         },
         {
@@ -66,12 +67,12 @@ const router = createRouter({
 })
 
 // 路由守卫
-router.beforeEach((to, from, next) => {
+/* router.beforeEach((to, from, next) => {
   if (to.name !== 'Login' && !cookie.get('token')) {
     next({ name: 'Login' })
   } else {
     next()
   }
-})
+}) */
 
 export default router

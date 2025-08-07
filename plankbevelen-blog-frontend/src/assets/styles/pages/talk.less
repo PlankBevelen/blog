@@ -77,4 +77,71 @@
 
 .talk-list {
     flex: 2;
+    
+    .loading {
+        .skeleton-talk {
+            display: flex;
+            align-items: flex-start;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: var(--card-bg);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px var(--shadow-color);
+        
+        .svg-icon {
+            color: var(--text-light-color);
+            margin-bottom: 16px;
+        }
+        
+        p {
+            color: var(--text-light-color);
+            font-size: 16px;
+            margin: 0;
+        }
+    }
+    
+    .talks-container {
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 40px;
+            padding: 20px 0;
+            
+            :deep(.el-pagination) {
+                --el-pagination-bg-color: var(--card-bg);
+                --el-pagination-text-color: var(--text-color);
+                --el-pagination-border-radius: 6px;
+                --el-pagination-button-bg-color: var(--card-bg);
+                --el-pagination-hover-color: var(--primary-color);
+                
+                .btn-prev,
+                .btn-next,
+                .el-pager li {
+                    background-color: var(--card-bg);
+                    border: 1px solid var(--border-color);
+                    color: var(--text-color);
+                    
+                    &:hover {
+                        color: var(--primary-color);
+                        border-color: var(--primary-color);
+                    }
+                    
+                    &.is-active {
+                        background-color: var(--primary-color);
+                        border-color: var(--primary-color);
+                        color: white;
+                    }
+                }
+            }
+        }
+    }
 }

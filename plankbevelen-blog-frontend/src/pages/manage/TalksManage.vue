@@ -38,7 +38,7 @@
                         <span v-else class="text-muted">无</span>
                     </template>
                 </el-table-column>
-                <el-table-column prop="createTime" label="发布时间" width="180" />
+                <el-table-column prop="create_at" label="发布时间" width="180" />
                 <el-table-column prop="status" label="状态" width="100">
                     <template #default="{ row }">
                         <el-tag :type="row.status === 'published' ? 'success' : 'warning'">
@@ -153,7 +153,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import talkService from '@/services/talk.service'
+import { useUserStore } from '@/stores/user'
+import type { TalkEntity, TalkCreateRequest } from '@/types/talk'
 
+const userStore = useUserStore()
 const loading = ref(false)
 const submitting = ref(false)
 const searchText = ref('')
@@ -166,7 +170,7 @@ const editingId = ref<number | null>(null)
 
 // 表单相关
 const talkFormRef = ref<FormInstance>()
-const talkForm = ref({
+const talkForm = ref<TalkCreateRequest>({
     content: '',
     images: [] as string[],
     status: 'published'
@@ -180,29 +184,7 @@ const talkRules: FormRules = {
 }
 
 // 模拟数据
-const talks = ref([
-    {
-        id: 1,
-        content: '今天天气真不错，适合出去走走！',
-        images: ['https://via.placeholder.com/200x200/4CAF50/white?text=Image1', 'https://via.placeholder.com/200x200/2196F3/white?text=Image2'],
-        createTime: '2024-01-15 14:30:00',
-        status: 'published'
-    },
-    {
-        id: 2,
-        content: '分享一些学习心得，今天学习了Vue3的组合式API，感觉非常强大！',
-        images: [],
-        createTime: '2024-01-14 10:20:00',
-        status: 'draft'
-    },
-    {
-        id: 3,
-        content: '周末去爬山了，风景很美，心情也很好！',
-        images: ['https://via.placeholder.com/200x200/FF9800/white?text=Mountain'],
-        createTime: '2024-01-13 16:45:00',
-        status: 'published'
-    }
-])
+const talks = ref<TalkEntity[]>([])
 
 // 筛选后的说说列表
 const filteredTalks = computed(() => {
@@ -273,38 +255,52 @@ const handleSubmit = async () => {
     try {
         await talkFormRef.value.validate()
         submitting.value = true
-        
-        // 模拟API调用
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        if (isEdit.value && editingId.value) {
-            // 更新说说
-            const index = talks.value.findIndex(talk => talk.id === editingId.value)
-            if (index > -1) {
-                talks.value[index] = {
-                    ...talks.value[index],
+        if( isEdit.value ) {
+            // 更新
+            const res = await talkService.update(editingId.value as number, talkForm.value as TalkCreateRequest)
+            if(res.status === 200) {
+                ElMessage.success('说说更新成功')
+                // 更新本地数据
+                const index = talks.value.findIndex(talk => talk.id === editingId.value)
+                if (index > -1) {
+                    talks.value[index] = {
+                        ...talks.value[index],
+                        ...talkForm.value
+                    }
+                }
+                resetForm()
+                dialogVisible.value = false
+                loading.value = false
+            }
+        } else {
+            // 发布
+            const res = await talkService.create(talkForm.value as TalkCreateRequest)
+
+            if(res.status === 200) {
+                ElMessage.success('说说发布成功')
+                
+                // 创建新的说说对象
+                const newTalk: TalkEntity = {
+                    id: res.data.insertId,
+                    user_id: userStore.userInfo?.id || 0,
                     content: talkForm.value.content,
                     images: [...talkForm.value.images],
-                    status: talkForm.value.status
+                    create_at: new Date().toISOString(),
+                    status: talkForm.value.status,
+                    likes_count: 0,
+                    comments_count: 0
                 }
+                
+                // 添加到说说列表的开头
+                talks.value.unshift(newTalk)
+                total.value = talks.value.length
+                
+                resetForm()
+                dialogVisible.value = false
+            } else {
+                ElMessage.error('发布失败')
             }
-            ElMessage.success('说说更新成功')
-        } else {
-            // 新增说说
-            const newTalk = {
-                id: Date.now(),
-                content: talkForm.value.content,
-                images: [...talkForm.value.images],
-                createTime: new Date().toLocaleString('zh-CN'),
-                status: talkForm.value.status
-            }
-            talks.value.unshift(newTalk)
-            total.value = talks.value.length
-            ElMessage.success('说说发布成功')
         }
-        
-        dialogVisible.value = false
-        resetForm()
     } catch (error) {
         console.error('表单验证失败:', error)
     } finally {
@@ -324,21 +320,46 @@ const handleDelete = async (row: any) => {
                 type: 'warning',
             }
         )
-        
-        const index = talks.value.findIndex(talk => talk.id === row.id)
-        if (index > -1) {
-            talks.value.splice(index, 1)
-            total.value = talks.value.length
+
+        // 调用删除接口
+        const res = await talkService.delete(row.id as number)
+        if(res.status === 200) {
+            // 从本地数据中删除
+            const index = talks.value.findIndex(talk => talk.id === row.id)
+            if (index > -1) {
+                talks.value.splice(index, 1)
+                total.value = talks.value.length
+            } else {
+                ElMessage.error('删除失败')
+                return
+            }
+            ElMessage.success('删除成功')
+        } else {
+            ElMessage.error('删除失败')
         }
-        
-        ElMessage.success('删除成功')
     } catch {
         ElMessage.info('已取消删除')
     }
 }
 
+// 获取所有说说
+async function fetchTalks() {
+    try {
+        loading.value = true
+        const res = await talkService.getAll()
+        if(res.status === 200) {
+            talks.value = res.data
+            total.value = res.data.length
+        }
+    } catch (error) {
+        console.error('获取说说失败:', error)
+    } finally {
+        loading.value = false
+    }
+}
+
 onMounted(() => {
-    total.value = talks.value.length
+    fetchTalks()
 })
 </script>
 
