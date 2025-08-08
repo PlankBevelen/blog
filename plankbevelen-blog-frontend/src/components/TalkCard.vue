@@ -28,13 +28,21 @@
     
     <div class="talk-actions">
       <div class="action-item" @click="handleLike">
-        <svg-icon name="like" :class="{ active: isLiked }" />
+        <svg-icon name="like" :class="{ active: isLiked }" color="var(--talk-color)" size="1.15em"/>
         <span>{{ talk.likes_count || 0 }}</span>
       </div>
-      <div class="action-item" @click="handleComment">
-        <svg-icon name="comment" />
-        <span>评论</span>
+      <div class="action-item" @click="handleComment" >
+        <svg-icon name="comment" :class="{ active: isLiked }" color="var(--talk-color)"/>
+        <span>{{ commentCount }}</span>
       </div>
+    </div>
+    
+    <!-- 评论区域 -->
+    <div v-if="showComments" class="comments-section">
+      <CommentSection 
+        :talk-id="props.talk.id" 
+        @comment-added="updateCommentCount"
+      />
     </div>
   </div>
 </template>
@@ -42,6 +50,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import type { TalkEntity } from '@/types/talk'
+import talkService from '@/services/talk.service';
+import CommentSection from './CommentSection.vue'
 
 interface Props {
   talk: TalkEntity
@@ -50,6 +60,10 @@ interface Props {
 const props = defineProps<Props>()
 
 const isLiked = ref(false)
+// 评论显示状态
+const showComments = ref(false)
+// 评论数量
+const commentCount = ref(props.talk.comments_count || 0)
 
 // 格式化时间
 const formatTime = (time: string) => {
@@ -78,15 +92,47 @@ const formatTime = (time: string) => {
   }
 }
 
+// 节流控制
+const isLiking = ref(false)
+
 // 点赞处理
 const handleLike = () => {
-  isLiked.value = !isLiked.value
-  // TODO: 调用点赞API
+  // 节流控制，防止频繁点击
+  if (isLiking.value) {
+    return
+  }
+  
+  isLiking.value = true
+  
+  // 调用toggle接口切换点赞状态
+  talkService.toggle(props.talk.id, isLiked.value ? 'unlike' : 'like').then(res => {
+    console.log(res)
+    // 切换点赞状态
+    isLiked.value = !isLiked.value
+    // 更新点赞数量
+    if (isLiked.value) {
+      props.talk.likes_count += 1
+    } else {
+      props.talk.likes_count -= 1
+    }
+  }).catch(err => {
+    console.error('点赞操作失败:', err)
+  }).finally(() => {
+    // 500ms后解除节流
+    setTimeout(() => {
+      isLiking.value = false
+    }, 500)
+  })
 }
 
 // 评论处理
 const handleComment = () => {
-  // TODO: 打开评论框
+  showComments.value = !showComments.value
+}
+
+// 更新评论数量
+const updateCommentCount = (count: number) => {
+  commentCount.value = count
 }
 
 // 图片预览
@@ -203,14 +249,16 @@ const previewImage = (image: string, index: number) => {
     align-items: center;
     gap: 24px;
     padding-top: 12px;
+    padding-right: 20px;
     border-top: 1px solid var(--border-color);
+    justify-content: flex-end;
     
     .action-item {
       display: flex;
       align-items: center;
       gap: 6px;
       cursor: pointer;
-      color: var(--talk-color);
+      color: var(--text-color);
       font-size: 14px;
       transition: color 0.3s ease;
       
@@ -234,6 +282,12 @@ const previewImage = (image: string, index: number) => {
     &:hover {
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
     }
+  }
+  
+  .comments-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #f0f0f0;
   }
 }
 </style>

@@ -28,24 +28,43 @@ class TalkService {
         return http.post(`/talk/update`, { id, talk })
     }
 
+    // 点赞切换
+    async toggle(id: number, type: 'like' | 'unlike') {
+        return http.post(`/talk/toggle`, { id, type })
+    }
+
     // 点赞
     async like(id: number) {
-        return http.post(`/talk/${id}/like`)
+        return http.post(`/talk/toggle`, { id, type: 'like' })
     }
 
     // 取消点赞
     async unlike(id: number) {
-        return http.post(`/talk/${id}/unlike`)
+        return http.post(`/talk/toggle`, { id, type: 'unlike' })
     }
 
-    // 评论
-    async comment(id: number, comment: string) {
-        return http.post(`/talk/${id}/comment`, { comment })
+    // 获取评论列表
+    async getComments(id: number) {
+        return http.get(`/talk/${id}/comments`)
+    }
+
+    // 添加评论
+    async addComment(id: number, content: string, parentId?: number, replyToUserId?: number) {
+        return http.post(`/talk/${id}/comment`, { 
+            content, 
+            parent_id: parentId, 
+            reply_to_user_id: replyToUserId 
+        })
     }
 
     // 删除评论
-    async deleteComment(id: number) {
-        return http.delete(`/talk/${id}/comment`)
+    async deleteComment(talkId: number, commentId: number) {
+        return http.delete(`/talk/${talkId}/comment/${commentId}`)
+    }
+
+    // 评论（保持兼容性）
+    async comment(id: number, comment: string) {
+        return this.addComment(id, comment)
     }
 }
 

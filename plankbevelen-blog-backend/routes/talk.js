@@ -64,6 +64,62 @@ talkRouter.delete('/delete/:id', authenticateToken, async (req, res) => {
     }
 })
 
+// 点赞
+talkRouter.post('/toggle', authenticateToken, async (req, res) => {
+    try {
+        const { id, type } = req.body;
+        const likeData = {
+            id,
+            type,
+            user_id: req.user.userId
+        };
+        const talk = await talkService.toggle(likeData);
+        res.status(200).json(talk);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+})
+
+// 获取评论列表
+talkRouter.get('/:id/comments', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const comments = await talkService.getComments(Number(id));
+        res.status(200).json(comments);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+})
+
+// 添加评论
+talkRouter.post('/:id/comment', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { content, parent_id, reply_to_user_id } = req.body;
+        const commentData = {
+            talk_id: Number(id),
+            user_id: req.user.userId,
+            content,
+            parent_id: parent_id || null,
+            reply_to_user_id: reply_to_user_id || null
+        };
+        const comment = await talkService.addComment(commentData);
+        res.status(200).json(comment);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+})
+
+// 删除评论
+talkRouter.delete('/:talkId/comment/:commentId', authenticateToken, async (req, res) => {
+    try {
+        const { talkId, commentId } = req.params;
+        const result = await talkService.deleteComment(Number(commentId), Number(talkId));
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+})
 
 
 export default talkRouter;

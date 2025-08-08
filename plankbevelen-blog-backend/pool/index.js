@@ -13,7 +13,8 @@ pool = mysql.createPool({
     database: process.env.DB_NAME || 'plankbevelen-blog',
     waitForConnections: true,
     connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT) || 200,
-    queueLimit: parseInt(process.env.DB_QUEUE_LIMIT) || 200
+    queueLimit: parseInt(process.env.DB_QUEUE_LIMIT) || 200,
+    timezone: '+08:00' // 设置为中国时区
 });
 
 setInterval(()=>{
