@@ -6,6 +6,10 @@
                 <h3>管理后台</h3>
             </div>
             <nav class="manage-nav">
+                <div class="nav-item" :class="{ active: activeMenu === 'articles' }" @click="setActiveMenu('articles')">
+                    <i class="icon">📄</i>
+                    <span>文章管理</span>
+                </div>
                 <div class="nav-item" :class="{ active: activeMenu === 'talks' }" @click="setActiveMenu('talks')">
                     <i class="icon">📝</i>
                     <span>说说管理</span>
@@ -50,10 +54,11 @@ const userStore = useUserStore()
 // 根据当前路由获取活跃菜单
 const activeMenu = computed(() => {
     const path = route.path
+    if (path.includes('/manage/articles')) return 'articles'
     if (path.includes('/manage/talks')) return 'talks'
     if (path.includes('/manage/albums')) return 'albums'
     if (path.includes('/manage/friends')) return 'friends'
-    return 'talks'
+    return 'articles'
 })
 
 const setActiveMenu = (menu: string) => {
@@ -62,6 +67,7 @@ const setActiveMenu = (menu: string) => {
 
 const getMenuTitle = (menu: string) => {
     const titles: Record<string, string> = {
+        articles: '文章管理',
         talks: '说说管理',
         albums: '相册管理',
         friends: '友联管理'

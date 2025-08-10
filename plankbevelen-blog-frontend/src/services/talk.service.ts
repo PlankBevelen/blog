@@ -1,7 +1,6 @@
 import http from "@/utils/http-common"
 import type { TalkEntity, TalkCreateRequest } from "@/types/talk"
 
-
 class TalkService {
     // 获取全部说说
     async getAll() {

@@ -14,7 +14,7 @@
                     <span>{{ item.title }}</span>
                 </li>
                 <li class="login-box" @click="handleLoginClick">
-                    <img :src="userStore.userAvatar" alt="" />
+                    <img v-lazy="userStore.userAvatar" alt="" />
                     <span>{{ userStore.userName }}</span>
                 </li>
                 <li class="theme-switch">

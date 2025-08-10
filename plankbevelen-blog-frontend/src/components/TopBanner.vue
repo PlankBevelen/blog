@@ -1,13 +1,13 @@
 <template>
     <div class="top-banner" :style="{ height: height, backgroundImage: `url(${imagePath})`}">
         <span class="title"> {{ title }} </span>
-        <canvas class="wave" id="wave"></canvas>
+        <canvas ref="canvasRef" class="wave"></canvas>
         <slot></slot>
     </div>
 </template>
 
 <script setup lang="ts">
-import { defineProps, nextTick, onMounted, computed } from 'vue';
+import { defineProps, nextTick, onMounted, computed, ref } from 'vue';
 import { useTheme } from '@/stores/useTheme';
 
 const props = defineProps({
@@ -26,6 +26,9 @@ const props = defineProps({
 });
 
 const themeStore = useTheme();
+
+// 添加 canvas ref
+const canvasRef = ref<HTMLCanvasElement>();
 
 // 根据主题动态设置波浪颜色
 const waveColors = computed(() => {
@@ -49,13 +52,18 @@ const hexToRgb = (hex: string) => {
 
 const oninitCanvas = () => {
     nextTick(() => {
-        const canvas = document.getElementById('wave');
+        const canvas = canvasRef.value;
         if (!canvas) {
             console.error('无法获取到 canvas 元素');
             return;
         }
         
         const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            console.error('无法获取到 canvas 2d 上下文');
+            return;
+        }
+        
         const canvasHeight = canvas.offsetHeight;
         const canvasWidth = canvas.offsetWidth;
         
@@ -70,14 +78,11 @@ const oninitCanvas = () => {
         const maxAmplitude = canvasHeight / 2.64;
         const waveYPosition = canvasHeight / 1.08; 
         
+        // 修复浏览器兼容性问题
         const requestAnimFrame = window.requestAnimationFrame || 
-                                window.webkitRequestAnimationFrame || 
-                                window.mozRequestAnimationFrame || 
-                                function(callback) {
-                                    setTimeout(callback, 1000 / 60);
-                                };
+                                ((callback: FrameRequestCallback) => setTimeout(callback, 1000 / 60));
         
-        let animationId = null;
+        let animationId: number | null = null;
         let step = 0;
         
         // 绘制波浪的函数
@@ -165,5 +170,4 @@ onMounted(() => {
         }
     }
 }
-
 </style>

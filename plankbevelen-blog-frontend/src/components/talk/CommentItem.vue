@@ -69,19 +69,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useUserStore } from '@/stores/user'
-
-interface Comment {
-  id: number
-  talk_id: number
-  user_id: number
-  parent_id: number | null
-  reply_to_user_id: number | null
-  content: string
-  created_at: string
-  nickname: string
-  avatar: string
-  reply_to_nickname?: string
-}
+import type { Comment } from '@/types/talk'
 
 interface Props {
   comment: Comment

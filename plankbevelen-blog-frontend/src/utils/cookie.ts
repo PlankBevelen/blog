@@ -19,6 +19,9 @@ export const cookie = {
     },
     // 清除所有
     clear() {
-        Cookies.remove()
+        const allCookies = Cookies.get()
+        Object.keys(allCookies).forEach(cookieName => {
+            Cookies.remove(cookieName)
+        })
     }
 }

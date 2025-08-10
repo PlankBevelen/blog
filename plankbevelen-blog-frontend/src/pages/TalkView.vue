@@ -79,7 +79,7 @@
 
 <script setup lang="ts">
 import TopBanner from '@/components/TopBanner.vue'
-import TalkCard from '@/components/TalkCard.vue'
+import TalkCard from '@/components/talk/TalkCard.vue'
 import talkImage from '@/assets/images/talk.jpg'
 import { ref, onMounted, computed } from 'vue'
 import { useTransition } from '@vueuse/core'

@@ -288,7 +288,9 @@ const handleSubmit = async () => {
                     create_at: new Date().toISOString(),
                     status: talkForm.value.status,
                     likes_count: 0,
-                    comments_count: 0
+                    comments_count: 0,
+                    nickname: userStore.userInfo?.nickname || '',
+                    avatar: userStore.userInfo?.avatar || ''
                 }
                 
                 // 添加到说说列表的开头

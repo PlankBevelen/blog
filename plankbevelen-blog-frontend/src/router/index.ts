@@ -10,16 +10,22 @@ const router = createRouter({
     },
     {
       path: '/home',
-      name: 'Home',
       component: () => import('@/pages/Index.vue'),
       children: [
         {
           path: '',
+          name: 'Home',
           component: () => import('@/pages/HomeView.vue')
         },
         {
           path: '/talk',
+          name: 'Talk',
           component: () => import('@/pages/TalkView.vue')
+        },
+        {
+          path: '/article',
+          name: 'Article',
+          component: () => import('@/pages/ArticleView.vue')
         },
         {
           path: '/login',
@@ -28,6 +34,7 @@ const router = createRouter({
         },
         {
           path: '/profile',
+          name: 'Profile',
           component: () => import('@/pages/ProfileView.vue')
         }
       ]
@@ -39,7 +46,7 @@ const router = createRouter({
       children: [
         {
           path: '',
-          redirect: '/manage/talks'
+          redirect: '/manage/articles'
         },
         {
           path: 'talks',
@@ -55,6 +62,11 @@ const router = createRouter({
           path: 'friends',
           name: 'ManageFriends',
           component: () => import('@/pages/manage/FriendsManage.vue')
+        },
+        {
+          path: 'articles',
+          name: 'ManageArticles',
+          component: () => import('@/pages/manage/ArticlesManage.vue')
         }
       ]
     },

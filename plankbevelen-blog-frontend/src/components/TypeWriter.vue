@@ -44,10 +44,10 @@ const typeChar = () => {
     if(charIndex.value < props.textArr[textIndex.value].length) {
         displayText.value += props.textArr[textIndex.value][charIndex.value];
         charIndex.value++;
-        timer = setTimeout(typeChar, props.speed);
+        timer.value = setTimeout(typeChar, props.speed);
     } else {
         isTyping.value = false;
-        timer = setTimeout(() => {
+        timer.value = setTimeout(() => {
             isDeleting.value = true;
             startTyping();
         }, props.interval);
@@ -57,12 +57,12 @@ const typeChar = () => {
 const deleteChar = () => {
     if( displayText.value.length > 0 ) {
         displayText.value = displayText.value.slice(0, -1);
-        timer = setTimeout(deleteChar, props.speed);
+        timer.value = setTimeout(deleteChar, props.speed);
     } else {
         isDeleting.value = false;
         textIndex.value = (textIndex.value + 1) % props.textArr.length;
         charIndex.value = 0;
-        timer = setTimeout(()=>{
+        timer.value = setTimeout(()=>{
             isTyping.value = true;
             startTyping();
         }, props.interval);
@@ -70,7 +70,7 @@ const deleteChar = () => {
 }
 
 const startCursorBlink = () => {
-    cursorBlinkTimer = setInterval(() => {
+    cursorBlinkTimer.value = setInterval(() => {
         isCursorVisible.value = !isCursorVisible.value;
     }, 500);
 };

@@ -2,7 +2,7 @@
   <div class="talk-card card">
     <div class="talk-header">
       <div class="user-info">
-        <img :src="talk.avatar || '/default-avatar.svg'" alt="avatar" class="avatar" />
+        <img v-lazy="talk.avatar || '/default-avatar.svg'" alt="avatar" class="avatar" />
         <div class="user-details">
           <span class="nickname">{{ talk.nickname || '匿名用户' }}</span>
           <span class="time">{{ formatTime(talk.create_at) }}</span>
@@ -21,7 +21,7 @@
           class="image-item"
           @click="previewImage(image, index)"
         >
-          <img :src="image" alt="说说图片" />
+          <img v-lazy="image" alt="说说图片" />
         </div>
       </div>
     </div>

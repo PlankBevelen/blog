@@ -3,6 +3,7 @@ import type { UserInfo, UserState } from '@/types/user'
 import { cookie } from '@/utils/cookie'
 import http from '@/utils/http-common'
 import { ElMessage } from 'element-plus'
+import Cookies from 'js-cookie'
 
 export const useUserStore = defineStore('user', {
     state: () : UserState => ({
@@ -30,15 +31,6 @@ export const useUserStore = defineStore('user', {
                 const refreshToken = cookie.get('refreshToken')
                 const userInfo = cookie.get('userInfo')
                 const rememberMe = cookie.get('rememberMe')
-                
-                console.log('=== 用户状态初始化调试信息 ===')
-                console.log('token:', token)
-                console.log('refreshToken:', refreshToken)
-                console.log('userInfo from cookie (raw):', userInfo)
-                console.log('userInfo type:', typeof userInfo)
-                console.log('userInfo === "undefined":', userInfo === 'undefined')
-                console.log('rememberMe:', rememberMe)
-                console.log('所有cookies:', cookie.getAll())
 
                 this.token = token || null
                 this.refreshToken = refreshToken || null
@@ -96,10 +88,9 @@ export const useUserStore = defineStore('user', {
                     this.refreshToken = refreshToken
                     this.isLoggedIn = true
                     console.log("登陆成功")
-                    console.log(userInfo, token, refreshToken)
                     // 保存到cookie
                     // 如果记住我，设置7天过期；否则设置1天过期（避免会话cookie在刷新时丢失）
-                    const cookieOptions = rememberMe ? 
+                    const cookieOptions: Cookies.CookieAttributes = rememberMe ? 
                         { expires: 7, sameSite: 'lax', secure: false } : 
                         { expires: 1, sameSite: 'lax', secure: false }
                     cookie.set('token', token, cookieOptions)
@@ -173,7 +164,7 @@ export const useUserStore = defineStore('user', {
                      this.userInfo = response.data.data
                     // 更新cookie中的用户信息，保持原有的过期时间设置
                     const rememberMe = cookie.get('rememberMe') === 'true'
-                    const cookieOptions = rememberMe ? 
+                    const cookieOptions: Cookies.CookieAttributes = rememberMe ? 
                         { expires: 7, sameSite: 'lax', secure: false } : 
                         { expires: 1, sameSite: 'lax', secure: false }
                     cookie.set('userInfo', JSON.stringify(this.userInfo), cookieOptions)

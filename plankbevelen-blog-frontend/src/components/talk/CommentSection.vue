@@ -62,19 +62,7 @@ import { ElMessage } from 'element-plus'
 import TalkService from '@/services/talk.service'
 import CommentItem from './CommentItem.vue'
 import { useUserStore } from '@/stores/user'
-
-interface Comment {
-  id: number
-  talk_id: number
-  user_id: number
-  parent_id: number | null
-  reply_to_user_id: number | null
-  content: string
-  created_at: string
-  nickname: string
-  avatar: string
-  reply_to_nickname?: string
-}
+import type { Comment } from '@/types/talk'
 
 interface Props {
   talkId: number

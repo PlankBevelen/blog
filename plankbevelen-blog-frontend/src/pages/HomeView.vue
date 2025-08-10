@@ -88,6 +88,7 @@
 
 <script setup lang="ts">
 import TopBanner from '@/components/TopBanner.vue';
+import TypeWriter from '@/components/TypeWriter.vue';
 import homeImage from '@/assets/images/home.jpg';
 
 const imagePath = homeImage;
