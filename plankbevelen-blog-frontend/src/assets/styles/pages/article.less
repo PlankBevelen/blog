@@ -177,67 +177,107 @@
 
 // 热门文章样式
 .popular-articles {
-  .popular-articles__header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 16px;
-    color: var(--text-color);
-    font-weight: 600;
-  }
-  
   .popular-articles__content {
     .popular-item {
       display: flex;
-      align-items: flex-start;
       gap: 12px;
       padding: 12px 0;
-      border-bottom: 1px solid var(--border-color);
+      border-bottom: 1px solid #f0f0f0;
       cursor: pointer;
       transition: all 0.3s ease;
-      
+
       &:last-child {
         border-bottom: none;
       }
-      
+
       &:hover {
-        background: var(--hover-bg);
-        margin: 0 -12px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
         padding: 12px;
-        border-radius: 6px;
+        margin: 0 -12px;
       }
-      
-      .rank {
-        width: 20px;
-        height: 20px;
-        background: var(--primary-color);
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 12px;
-        font-weight: 600;
+
+      .popular-item__rank {
         flex-shrink: 0;
+        width: 24px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        .rank {
+          background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+          color: white;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+          font-weight: bold;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
       }
-      
-      .info {
+
+      .popular-item__image {
+        position: relative;
+        flex-shrink: 0;
+        width: 80px;
+        height: 60px;
+        border-radius: 8px;
+        overflow: hidden;
+
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.3s ease;
+        }
+      }
+
+      .popular-item__content {
         flex: 1;
-        
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-width: 0; /* 防止内容溢出 */
+
         .title {
-          margin: 0 0 4px 0;
           font-size: 14px;
-          color: var(--text-color);
+          font-weight: 600;
           line-height: 1.4;
+          margin: 0 0 8px 0;
+          color: #333;
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
+          text-overflow: ellipsis;
         }
-        
-        .views {
-          font-size: 12px;
-          color: var(--text-color-secondary);
+
+        .meta {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+
+          .views, .date {
+            font-size: 12px;
+            color: #666;
+          }
+
+          .views {
+            color: var(--secondary-color);
+            font-weight: 500;
+          }
+        }
+      }
+
+      &:hover {
+        .popular-item__image img {
+          transform: scale(1.05);
+        }
+
+        .title {
+          color: #007bff;
         }
       }
     }
@@ -246,61 +286,91 @@
 
 // 最新文章样式
 .recent-articles {
-  .recent-articles__header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 16px;
-    color: var(--text-color);
-    font-weight: 600;
-  }
-  
   .recent-articles__content {
     .recent-item {
+      display: flex;
+      gap: 12px;
       padding: 12px 0;
-      border-bottom: 1px solid var(--border-color);
+      border-bottom: 1px solid #f0f0f0;
       cursor: pointer;
       transition: all 0.3s ease;
-      
+
       &:last-child {
         border-bottom: none;
       }
-      
+
       &:hover {
-        background: var(--hover-bg);
-        margin: 0 -12px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
         padding: 12px;
-        border-radius: 6px;
+        margin: 0 -12px;
       }
-      
-      .title {
-        margin: 0 0 8px 0;
-        font-size: 14px;
-        color: var(--text-color);
-        line-height: 1.4;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
+
+      .recent-item__image {
+        flex-shrink: 0;
+        width: 80px;
+        height: 60px;
+        border-radius: 8px;
         overflow: hidden;
-      }
-      
-      .meta {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        
-        .category {
-          background: var(--tag-bg);
-          color: var(--tag-color);
-          padding: 2px 8px;
-          border-radius: 12px;
-          font-size: 11px;
-          border: 1px solid var(--tag-border);
+
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.3s ease;
         }
-        
-        .date {
-          font-size: 12px;
-          color: var(--text-color-secondary);
+      }
+
+      .recent-item__content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-width: 0;
+
+        .title {
+          font-size: 14px;
+          font-weight: 600;
+          line-height: 1.4;
+          margin: 0 0 8px 0;
+          color: #333;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .meta {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 8px;
+
+          .category {
+            background: var(--primary-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+          }
+
+          .date {
+            font-size: 12px;
+            color: #666;
+          }
+        }
+      }
+
+      &:hover {
+        .recent-item__image img {
+          transform: scale(1.05);
+        }
+
+        .title {
+          color: #007bff;
         }
       }
     }

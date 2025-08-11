@@ -8,7 +8,7 @@
                     <div class="article-list__header">
                         <h2>文章列表</h2>
                         <div class="category-title">
-                            <span>{{ selectedCategory }}</span>
+                            <span>{{ selectedCategoryName }}</span>
                         </div>
                     </div>
                     
@@ -54,14 +54,22 @@
                         <span>文章分类</span>
                     </div>
                     <div class="category__content">
+                        <!-- 添加全部分类选项 -->
                         <div 
-                            v-for="category in categories" 
+                            :class="['category__item', { active: selectedCategory === null }]"
+                            @click="selectedCategory = null"
+                        >
+                            <span class="name">全部</span>
+                            <span class="count">({{ articleStore.getPublishedArticlesTotal }})</span>
+                        </div>
+                        <div 
+                            v-for="category in articleStore.categories" 
                             :key="category.id"
                             :class="['category__item', { active: selectedCategory === category.id }]"
                             @click="selectedCategory = category.id"
                         >
                             <span class="name">{{ category.name }}</span>
-                            <span class="count">({{ category.article_count }})</span>
+                            <span class="count">({{ getCategoryArticleCount(category.id) }})</span>
                         </div>
                     </div>
                 </div>
@@ -79,10 +87,18 @@
                             class="popular-item"
                             @click="goToArticle(article.id)"
                         >
-                            <span class="rank">{{ index + 1 }}</span>
-                            <div class="info">
+                            <div class="popular-item__rank">      
+                                <span class="rank">{{ index + 1 }}</span>
+                            </div>
+                            <div class="popular-item__image">
+                                <img v-lazy="article.cover" :alt="article.title" />
+                            </div>
+                            <div class="popular-item__content">
                                 <h4 class="title">{{ article.title }}</h4>
-                                <span class="views">{{ formatNumber(article.views) }} 次阅读</span>
+                                <div class="meta">
+                                    <span class="views">{{ formatNumber(article.views_count) }} 次阅读</span>
+                                    <span class="date">{{ formatDate(article.created_at) }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -101,10 +117,15 @@
                             class="recent-item"
                             @click="goToArticle(article.id)"
                         >
-                            <h4 class="title">{{ article.title }}</h4>
-                            <div class="meta">
-                                <span class="category">{{ article.category }}</span>
-                                <span class="date">{{ formatDate(article.create_at) }}</span>
+                            <div class="recent-item__image">
+                                <img v-lazy="article.cover" :alt="article.title" />
+                            </div>
+                            <div class="recent-item__content">
+                                <h4 class="title">{{ article.title }}</h4>
+                                <div class="meta">
+                                    <span class="category">{{ articleStore.getCategoryNameById(article.category_id) }}</span>
+                                    <span class="date">{{ formatDate(article.created_at) }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -122,18 +143,16 @@ import ArticleCard from '@/components/article/ArticleCard.vue'
 import imagePath from '@/assets/images/article.jpg'
 import type { ArticleEntity, ArticleCategory } from '@/types/article'
 import { useArticleStore } from '@/stores/article'
+import { formatNumber, formatDate } from '@/utils/format'
 
 const articleStore = useArticleStore()
-
 const router = useRouter()
+
 const title = ref('文章')
 const image = ref(imagePath)
 
 // 数据状态
 const loading = ref(false)
-const categories = ref<ArticleCategory[]>([])
-const popularArticles = ref<{ id: number; title: string; views: number }[]>([])
-const recentArticles = ref<{ id: number; title: string; category: string; create_at: string }[]>([])
 
 // 筛选和分页
 const activeTab = ref('all')
@@ -141,11 +160,18 @@ const selectedCategory = ref<number | null>(null)
 const currentPage = ref(1)
 const pageSize = ref(10)
 
-onMounted( async () => {
-  // 获取已发布的文章
+onMounted(async () => {
   loading.value = true
-  await articleStore.fetchPublishedArticles()
-  loading.value = false
+  try {
+    // 初始化分类数据
+    await articleStore.initArticleStore()
+    // 获取已发布的文章
+    await articleStore.fetchPublishedArticles()
+  } catch (error) {
+    console.error('Failed to load articles:', error)
+  } finally {
+    loading.value = false
+  }
 })
 
 // 计算属性
@@ -153,14 +179,14 @@ const filteredArticles = computed(() => {
   let filtered = [...articleStore.published_articles]
   
   // 按分类筛选
-  if (selectedCategory.value) {
+  if (selectedCategory.value !== null) {
     filtered = filtered.filter(article => article.category_id === selectedCategory.value)
   }
   
   // 按标签筛选
   switch (activeTab.value) {
     case 'latest':
-      filtered.sort((a , b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       break
     case 'popular':
       filtered.sort((a, b) => b.views_count - a.views_count)
@@ -183,23 +209,17 @@ const paginatedArticles = computed(() => {
   return filteredArticles.value.slice(start, end)
 })
 
-// 方法
-const formatNumber = (num: number): string => {
-  if (num >= 10000) {
-    return (num / 10000).toFixed(1) + 'w'
-  } else if (num >= 1000) {
-    return (num / 1000).toFixed(1) + 'k'
-  }
-  return num.toString()
-}
+// 直接使用 store 的 getters
+const popularArticles = computed(() => articleStore.getPopularArticles)
+const recentArticles = computed(() => articleStore.getRecentArticles)
 
-const formatDate = (dateStr: string): string => {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('zh-CN', {
-    month: 'short',
-    day: 'numeric'
-  })
-}
+// 获取当前选中分类的名称
+const selectedCategoryName = computed(() => {
+  if (selectedCategory.value === null) {
+    return '全部'
+  }
+  return articleStore.getCategoryNameById(selectedCategory.value) || '未知分类'
+})
 
 const handlePageChange = (page: number) => {
   currentPage.value = page
@@ -211,38 +231,10 @@ const goToArticle = (id: number) => {
   router.push({ name: 'ArticleDetail', query: { id } })
 }
 
-// 模拟数据
-const initMockData = () => {
-  // 模拟文章数据
-  
-  // 模拟分类数据
-  /* categories.value = [
-    { id: 0, name: '全部', article_count: 5, create_at: '2024-01-01T00:00:00Z' },
-    { id: 1, name: 'Vue.js', article_count: 1, create_at: '2024-01-01T00:00:00Z' },
-    { id: 2, name: 'TypeScript', article_count: 1, create_at: '2024-01-01T00:00:00Z' },
-    { id: 3, name: '构建工具', article_count: 1, create_at: '2024-01-01T00:00:00Z' },
-    { id: 4, name: 'CSS', article_count: 1, create_at: '2024-01-01T00:00:00Z' },
-    { id: 5, name: 'Node.js', article_count: 1, create_at: '2024-01-01T00:00:00Z' }
-  ]
-  
-  // 模拟热门文章
-  popularArticles.value = [
-    { id: 1, title: 'Vue 3 Composition API 深度解析', views: 1250 },
-    { id: 5, title: 'Node.js 性能优化最佳实践', views: 892 },
-    { id: 2, title: 'TypeScript 进阶技巧与实战', views: 980 }
-  ]
-  
-  // 模拟最新文章
-  recentArticles.value = [
-    { id: 1, title: 'Vue 3 Composition API 深度解析', category: 'Vue.js', create_at: '2024-01-15T10:30:00Z' },
-    { id: 2, title: 'TypeScript 进阶技巧与实战', category: 'TypeScript', create_at: '2024-01-12T14:20:00Z' },
-    { id: 3, title: 'Vite 构建工具完全指南', category: '构建工具', create_at: '2024-01-10T09:15:00Z' }
-  ] */
+// 获取特定分类的文章数量
+const getCategoryArticleCount = (categoryId: number): number => {
+  return articleStore.published_articles.filter(article => article.category_id === categoryId).length
 }
-
-onMounted(() => {
-  initMockData()
-})
 </script>
 
 <style scoped lang="less" src="@/assets/styles/pages/article.less"></style>

@@ -23,6 +23,15 @@ export const useArticleStore = defineStore('article', {
         getPublishedArticlesTotal: (state) => {
             return state.published_articles.length
         },
+
+        getPopularArticles: (state) => {
+            return state.published_articles.sort((a, b) => b.views_count - a.views_count).slice(0, 5)
+
+        },
+
+        getRecentArticles: (state) => {
+            return state.published_articles.sort((a, b) => b.id - a.id).slice(0, 5)
+        },
     },
     actions: {
         async initArticleStore() {

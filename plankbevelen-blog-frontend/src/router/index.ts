@@ -33,6 +33,11 @@ const router = createRouter({
           component: () => import('@/pages/ArticleDetail.vue')
         },
         {
+          path: '/album',
+          name: 'Album',
+          component: () => import('@/pages/AlbumView.vue')
+        },
+        {
           path: '/login',
           name: 'Login',
           component: () => import('@/pages/LoginView.vue')
