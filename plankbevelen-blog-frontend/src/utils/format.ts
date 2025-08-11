@@ -20,6 +20,17 @@ export const formatDate = (dateStr: string) : string=> {
   }
 }
 
+export const formatDatetime = (dateStr: string) : string => {
+  return new Date(dateStr).toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric'
+  })
+}
+
 export const formatNumber = (num: number): string => {
   if (num >= 10000) {
     return (num / 10000).toFixed(1) + 'w'

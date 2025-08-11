@@ -1,7 +1,7 @@
 <template>
   <div class="article-card card">
     <!-- 文章封面 -->
-    <div class="article-cover" @click="goToDetail">
+    <div class="article-cover">
       <img v-lazy="article.cover || '/loading.gif'" :alt="article.title" class="cover-image" />
       <div class="cover-overlay">
         <div class="category-tag">{{ categoryName }}</div>
@@ -10,7 +10,7 @@
     
     <!-- 文章信息 -->
     <div class="article-info">
-      <h3 class="article-title" @click="goToDetail">{{ article.title }}</h3>
+      <h3 class="article-title">{{ article.title }}</h3>
       <p class="article-summary">{{ article.summary || '暂无摘要...' }}</p>
       
       <!-- 文章统计信息 -->
@@ -81,10 +81,6 @@ onMounted(async () => {
 const props = defineProps<Props>()
 const router = useRouter()
 
-// 跳转到文章详情
-const goToDetail = () => {
-  router.push({path: '/article', query: { id: props.article.id }})
-}
 </script>
 
 <style scoped>

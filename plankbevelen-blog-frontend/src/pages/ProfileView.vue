@@ -118,6 +118,15 @@
                 <p>{{ formatDate(userStore.userInfo?.last_login) || '暂无记录' }}</p>
               </div>
             </div>
+
+            <div class="security-item">
+              <div class="security-info">
+                <h4>退出登录</h4>
+              </div>
+              <el-button type="danger" @click="handleLogout">
+                登出
+              </el-button>
+            </div>
           </div>
         </el-card>
       </div>
@@ -201,9 +210,10 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Camera, Plus } from '@element-plus/icons-vue'
 import type { FormInstance, FormRules, UploadProps } from 'element-plus'
 import type { UserInfo } from '@/types/user'
+import { useRouter } from 'vue-router'
 
 const userStore = useUserStore()
-
+const router = useRouter()
 // 编辑模式
 const editMode = ref(false)
 const saving = ref(false)
@@ -407,6 +417,11 @@ const formatDate = (dateString?: string) => {
     month: 'long',
     day: 'numeric'
   })
+}
+
+const handleLogout = () => {
+  userStore.logout()
+  router.replace('/login')
 }
 
 // 组件挂载时初始化

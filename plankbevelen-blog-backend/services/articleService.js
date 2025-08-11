@@ -188,6 +188,18 @@ class ArticleService {
            })
         })
     }
+
+    async getArticleDetail(id) {
+        return new Promise((resolve, reject) => {
+            pool.query('SELECT * FROM articles WHERE id = ?', [id], (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            })
+        })
+    }
 }
 
 export default new ArticleService();

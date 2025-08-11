@@ -23,6 +23,9 @@ class ArticleService {
     async deleteArticle(id: number) {
         return http.post('/article/delete', { id })
     }
+    async getArticleDetail(id: number) {
+        return http.post('/article/detail', { id })
+    }
 }
 
 export default new ArticleService();

@@ -65,17 +65,23 @@ CREATE TABLE IF NOT EXISTS article_categories(
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
 ) COMMENT '文章分类表';
 
+INSERT INTO article_categories (name) VALUES 
+('工程化'),
+('前端'),
+('生活日常'),
+('学习笔记'),
+('旅游');
+
 -- 文章表
 CREATE TABLE IF NOT EXISTS articles(
 	id INT AUTO_INCREMENT PRIMARY KEY COMMENT '文章ID',
 	title VARCHAR(255) NOT NULL COMMENT '文章标题',
 	summary TEXT COMMENT '文章摘要',
 	content LONGTEXT COMMENT '文章内容',
-	cover VARCHAR(500) COMMENT '封面图片URL',
+	cover JSON COMMENT '封面图片',
 	category_id INT NOT NULL COMMENT '分类ID',
 	user_id INT NOT NULL COMMENT '作者ID',
 	views_count INT DEFAULT 0 COMMENT '浏览次数',
-	likes_count INT DEFAULT 0 COMMENT '点赞数量',
 	comments_count INT DEFAULT 0 COMMENT '评论数量',
 	average_score DECIMAL(3,2) DEFAULT 0.00 COMMENT '平均评分',
 	status ENUM('draft', 'published', 'archived') DEFAULT 'draft' COMMENT '状态',

@@ -28,6 +28,11 @@ const router = createRouter({
           component: () => import('@/pages/ArticleView.vue')
         },
         {
+          path: '/article/detail',
+          name: 'ArticleDetail',
+          component: () => import('@/pages/ArticleDetail.vue')
+        },
+        {
           path: '/login',
           name: 'Login',
           component: () => import('@/pages/LoginView.vue')
@@ -67,7 +72,7 @@ const router = createRouter({
           path: 'articles',
           name: 'ManageArticles',
           component: () => import('@/pages/manage/ArticlesManage.vue')
-        }
+        },
       ]
     },
     {

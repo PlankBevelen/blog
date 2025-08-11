@@ -27,7 +27,7 @@
                                 v-for="article in paginatedArticles" 
                                 :key="article.id" 
                                 :article="article" 
-
+                                @click="goToArticle(article.id)"
                             />
                             
                             <!-- 分页 -->
@@ -208,7 +208,7 @@ const handlePageChange = (page: number) => {
 }
 
 const goToArticle = (id: number) => {
-  router.push(`/article/${id}`)
+  router.push({ name: 'ArticleDetail', query: { id } })
 }
 
 // 模拟数据
