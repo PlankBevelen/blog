@@ -65,23 +65,17 @@ CREATE TABLE IF NOT EXISTS article_categories(
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
 ) COMMENT '文章分类表';
 
-INSERT INTO article_categories (name) VALUES 
-('工程化'),
-('前端'),
-('生活日常'),
-('学习笔记'),
-('旅游');
-
 -- 文章表
 CREATE TABLE IF NOT EXISTS articles(
 	id INT AUTO_INCREMENT PRIMARY KEY COMMENT '文章ID',
 	title VARCHAR(255) NOT NULL COMMENT '文章标题',
 	summary TEXT COMMENT '文章摘要',
 	content LONGTEXT COMMENT '文章内容',
-	cover JSON COMMENT '封面图片',
+	cover VARCHAR(500) COMMENT '封面图片URL',
 	category_id INT NOT NULL COMMENT '分类ID',
 	user_id INT NOT NULL COMMENT '作者ID',
 	views_count INT DEFAULT 0 COMMENT '浏览次数',
+	likes_count INT DEFAULT 0 COMMENT '点赞数量',
 	comments_count INT DEFAULT 0 COMMENT '评论数量',
 	average_score DECIMAL(3,2) DEFAULT 0.00 COMMENT '平均评分',
 	status ENUM('draft', 'published', 'archived') DEFAULT 'draft' COMMENT '状态',
@@ -179,3 +173,81 @@ INSERT INTO article_tags (name, color) VALUES
 ('全栈', '#E6A23C'),
 ('数据库', '#F56C6C'),
 ('算法', '#909399');
+
+-- 相册分类表
+CREATE TABLE IF NOT EXISTS album_categories(
+    id INT AUTO_INCREMENT PRIMARY KEY COMMENT '分类ID',
+    name VARCHAR(50) NOT NULL COMMENT '分类名称',
+    description TEXT COMMENT '分类描述',
+    icon VARCHAR(100) COMMENT '分类图标',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
+) COMMENT '相册分类表';
+
+-- 相册表
+CREATE TABLE IF NOT EXISTS albums(
+    id INT AUTO_INCREMENT PRIMARY KEY COMMENT '相册ID',
+    name VARCHAR(100) NOT NULL COMMENT '相册名称',
+    description TEXT COMMENT '相册描述',
+    cover_image VARCHAR(255) COMMENT '封面图片',
+    category_id INT COMMENT '分类ID',
+    user_id INT NOT NULL COMMENT '创建用户ID',
+    photo_count INT DEFAULT 0 COMMENT '照片数量',
+    views INT DEFAULT 0 COMMENT '浏览量',
+
+    is_featured BOOLEAN DEFAULT FALSE COMMENT '是否推荐',
+    is_private BOOLEAN DEFAULT FALSE COMMENT '是否私有',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    FOREIGN KEY (category_id) REFERENCES album_categories(id) ON DELETE SET NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_category (category_id),
+    INDEX idx_user (user_id),
+    INDEX idx_featured (is_featured),
+    INDEX idx_private (is_private)
+) COMMENT '相册表';
+
+-- 相册照片表
+CREATE TABLE IF NOT EXISTS album_photos(
+    id INT AUTO_INCREMENT PRIMARY KEY COMMENT '照片ID',
+    album_id INT NOT NULL COMMENT '相册ID',
+    filename VARCHAR(255) NOT NULL COMMENT '文件名',
+    original_name VARCHAR(255) NOT NULL COMMENT '原始文件名',
+    file_path VARCHAR(500) NOT NULL COMMENT '文件路径',
+    url VARCHAR(500) NOT NULL COMMENT '访问URL',
+    thumbnail_url VARCHAR(500) COMMENT '缩略图URL',
+    thumbnail_path VARCHAR(500) COMMENT '缩略图路径',
+    description TEXT COMMENT '照片描述',
+    tags JSON COMMENT '照片标签',
+    size BIGINT NOT NULL COMMENT '文件大小(字节)',
+    width INT DEFAULT 0 COMMENT '图片宽度',
+    height INT DEFAULT 0 COMMENT '图片高度',
+    taken_at TIMESTAMP NULL COMMENT '拍摄时间',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    FOREIGN KEY (album_id) REFERENCES albums(id) ON DELETE CASCADE,
+    INDEX idx_album (album_id),
+    INDEX idx_taken_at (taken_at)
+) COMMENT '相册照片表';
+
+
+
+-- 插入默认相册分类数据
+INSERT INTO album_categories (name, description, icon, sort_order) VALUES 
+('风景', '自然风光、城市景观等', 'landscape', 1),
+('人物', '人像摄影、生活照等', 'person', 2),
+('旅行', '旅游记录、游记等', 'travel', 3),
+('生活', '日常生活、随拍等', 'life', 4),
+('活动', '聚会、庆典、活动等', 'event', 5),
+('其他', '其他类型照片', 'other', 6);
+
+-- 插入示例用户数据（如果不存在）
+INSERT IGNORE INTO users (nickname, email, password, avatar) VALUES 
+('管理员', 'admin@example.com', '$2b$10$example.hash.password', '/uploads/avatars/default.jpg');
+
+-- 插入示例相册数据
+INSERT INTO albums (name, description, cover_image, category_id, user_id, photo_count, views, is_featured, is_private) VALUES 
+('春日风光', '春天的美丽景色', '/uploads/albums/spring-cover.jpg', 1, 1, 12, 156, TRUE, FALSE),
+('旅行记录', '2024年春季旅行照片', '/uploads/albums/travel-cover.jpg', 3, 1, 25, 89, FALSE, FALSE),
+('日常生活', '生活中的美好瞬间', '/uploads/albums/life-cover.jpg', 4, 1, 8, 45, FALSE, FALSE),
+('人像摄影', '人物摄影作品集', '/uploads/albums/portrait-cover.jpg', 2, 1, 15, 78, TRUE, FALSE);

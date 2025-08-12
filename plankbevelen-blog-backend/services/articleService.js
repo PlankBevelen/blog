@@ -200,6 +200,364 @@ class ArticleService {
             })
         })
     }
+
+    async updateViewsCount(id) {
+        return new Promise((resolve, reject) => {
+            pool.query('UPDATE articles SET views_count = views_count + 1 WHERE id = ?', [id], (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            })
+        })
+    }
+
+    // 评论相关方法
+    async getComments(articleId) {
+        return new Promise((resolve, reject) => {
+            pool.query(`
+                SELECT ac.*, u.nickname, u.avatar,
+                       ru.nickname as reply_to_nickname
+                FROM article_comments ac
+                LEFT JOIN users u ON ac.user_id = u.id
+                LEFT JOIN users ru ON ac.reply_to_user_id = ru.id
+                WHERE ac.article_id = ?
+                ORDER BY ac.created_at ASC
+            `, [articleId], (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            })
+        })
+    }
+
+    async addComment(commentData) {
+        return new Promise((resolve, reject) => {
+            const { article_id, user_id, content, parent_id, reply_to_user_id } = commentData;
+            
+            pool.getConnection((err, connection) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                connection.beginTransaction((err) => {
+                    if (err) {
+                        connection.release();
+                        reject(err);
+                        return;
+                    }
+
+                    // 插入评论
+                    connection.query(
+                        'INSERT INTO article_comments (article_id, user_id, content, parent_id, reply_to_user_id) VALUES (?, ?, ?, ?, ?)',
+                        [article_id, user_id, content, parent_id, reply_to_user_id],
+                        (err, commentResult) => {
+                            if (err) {
+                                return connection.rollback(() => {
+                                    connection.release();
+                                    reject(err);
+                                });
+                            }
+
+                            // 更新文章评论数
+                            connection.query(
+                                'UPDATE articles SET comments_count = comments_count + 1 WHERE id = ?',
+                                [article_id],
+                                (err, updateResult) => {
+                                    if (err) {
+                                        return connection.rollback(() => {
+                                            connection.release();
+                                            reject(err);
+                                        });
+                                    }
+
+                                    connection.commit((err) => {
+                                        if (err) {
+                                            return connection.rollback(() => {
+                                                connection.release();
+                                                reject(err);
+                                            });
+                                        }
+
+                                        connection.release();
+                                        resolve({
+                                            id: commentResult.insertId,
+                                            affectedRows: commentResult.affectedRows
+                                        });
+                                    });
+                                }
+                            );
+                        }
+                    );
+                });
+            });
+        })
+    }
+
+    async deleteComment(commentId, userId) {
+        return new Promise((resolve, reject) => {
+            pool.getConnection((err, connection) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                connection.beginTransaction((err) => {
+                    if (err) {
+                        connection.release();
+                        reject(err);
+                        return;
+                    }
+
+                    // 首先获取评论信息，验证权限
+                    connection.query(
+                        'SELECT article_id, user_id FROM article_comments WHERE id = ?',
+                        [commentId],
+                        (err, commentResult) => {
+                            if (err) {
+                                return connection.rollback(() => {
+                                    connection.release();
+                                    reject(err);
+                                });
+                            }
+
+                            if (commentResult.length === 0) {
+                                return connection.rollback(() => {
+                                    connection.release();
+                                    reject(new Error('评论不存在'));
+                                });
+                            }
+
+                            const comment = commentResult[0];
+                            if (comment.user_id !== userId) {
+                                return connection.rollback(() => {
+                                    connection.release();
+                                    reject(new Error('无权限删除此评论'));
+                                });
+                            }
+
+                            // 递归删除评论及其回复
+                            const deleteCommentAndReplies = (id) => {
+                                return new Promise((resolve, reject) => {
+                                    // 先删除所有回复
+                                    connection.query(
+                                        'SELECT id FROM article_comments WHERE parent_id = ?',
+                                        [id],
+                                        (err, replies) => {
+                                            if (err) {
+                                                reject(err);
+                                                return;
+                                            }
+
+                                            const deletePromises = replies.map(reply => deleteCommentAndReplies(reply.id));
+                                            Promise.all(deletePromises)
+                                                .then(() => {
+                                                    // 删除评论本身
+                                                    connection.query(
+                                                        'DELETE FROM article_comments WHERE id = ?',
+                                                        [id],
+                                                        (err, result) => {
+                                                            if (err) {
+                                                                reject(err);
+                                                            } else {
+                                                                resolve(result);
+                                                            }
+                                                        }
+                                                    );
+                                                })
+                                                .catch(reject);
+                                        }
+                                    );
+                                });
+                            };
+
+                            deleteCommentAndReplies(commentId)
+                                .then(() => {
+                                    // 更新文章评论数（需要重新计算）
+                                    connection.query(
+                                        'UPDATE articles SET comments_count = (SELECT COUNT(*) FROM article_comments WHERE article_id = ?) WHERE id = ?',
+                                        [comment.article_id, comment.article_id],
+                                        (err, updateResult) => {
+                                            if (err) {
+                                                return connection.rollback(() => {
+                                                    connection.release();
+                                                    reject(err);
+                                                });
+                                            }
+
+                                            connection.commit((err) => {
+                                                if (err) {
+                                                    return connection.rollback(() => {
+                                                        connection.release();
+                                                        reject(err);
+                                                    });
+                                                }
+
+                                                connection.release();
+                                                resolve({ message: '删除成功' });
+                                            });
+                                        }
+                                    );
+                                })
+                                .catch((err) => {
+                                    connection.rollback(() => {
+                                        connection.release();
+                                        reject(err);
+                                    });
+                                });
+                        }
+                    );
+                });
+            });
+        })
+    }
+
+    // 评分相关方法
+    async rateArticle(ratingData) {
+        return new Promise((resolve, reject) => {
+            const { article_id, user_id, score } = ratingData;
+            
+            pool.getConnection((err, connection) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                connection.beginTransaction((err) => {
+                    if (err) {
+                        connection.release();
+                        reject(err);
+                        return;
+                    }
+
+                    // 检查用户是否已经评分过
+                    connection.query(
+                        'SELECT id FROM article_ratings WHERE article_id = ? AND user_id = ?',
+                        [article_id, user_id],
+                        (err, existingRating) => {
+                            if (err) {
+                                return connection.rollback(() => {
+                                    connection.release();
+                                    reject(err);
+                                });
+                            }
+
+                            if (existingRating.length > 0) {
+                                // 更新现有评分
+                                connection.query(
+                                    'UPDATE article_ratings SET score = ? WHERE article_id = ? AND user_id = ?',
+                                    [score, article_id, user_id],
+                                    (err, updateResult) => {
+                                        if (err) {
+                                            return connection.rollback(() => {
+                                                connection.release();
+                                                reject(err);
+                                            });
+                                        }
+
+                                        this.updateArticleAverageScore(connection, article_id)
+                                            .then(() => {
+                                                connection.commit((err) => {
+                                                    if (err) {
+                                                        return connection.rollback(() => {
+                                                            connection.release();
+                                                            reject(err);
+                                                        });
+                                                    }
+
+                                                    connection.release();
+                                                    resolve({ message: '评分更新成功' });
+                                                });
+                                            })
+                                            .catch((err) => {
+                                                connection.rollback(() => {
+                                                    connection.release();
+                                                    reject(err);
+                                                });
+                                            });
+                                    }
+                                );
+                            } else {
+                                // 插入新评分
+                                connection.query(
+                                    'INSERT INTO article_ratings (article_id, user_id, score) VALUES (?, ?, ?)',
+                                    [article_id, user_id, score],
+                                    (err, insertResult) => {
+                                        if (err) {
+                                            return connection.rollback(() => {
+                                                connection.release();
+                                                reject(err);
+                                            });
+                                        }
+
+                                        this.updateArticleAverageScore(connection, article_id)
+                                            .then(() => {
+                                                connection.commit((err) => {
+                                                    if (err) {
+                                                        return connection.rollback(() => {
+                                                            connection.release();
+                                                            reject(err);
+                                                        });
+                                                    }
+
+                                                    connection.release();
+                                                    resolve({ 
+                                                        id: insertResult.insertId,
+                                                        message: '评分成功'
+                                                    });
+                                                });
+                                            })
+                                            .catch((err) => {
+                                                connection.rollback(() => {
+                                                    connection.release();
+                                                    reject(err);
+                                                });
+                                            });
+                                    }
+                                );
+                            }
+                        }
+                    );
+                });
+            });
+        })
+    }
+
+    async updateArticleAverageScore(connection, articleId) {
+        return new Promise((resolve, reject) => {
+            connection.query(
+                'UPDATE articles SET average_score = (SELECT AVG(score) FROM article_ratings WHERE article_id = ?) WHERE id = ?',
+                [articleId, articleId],
+                (err, result) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(result);
+                    }
+                }
+            );
+        });
+    }
+
+    async getUserRating(articleId, userId) {
+        return new Promise((resolve, reject) => {
+            pool.query(
+                'SELECT * FROM article_ratings WHERE article_id = ? AND user_id = ?',
+                [articleId, userId],
+                (err, result) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(result.length > 0 ? result[0] : null);
+                    }
+                }
+            );
+        })
+    }
 }
 
 export default new ArticleService();

@@ -2,12 +2,14 @@ import express from "express";
 import userRouter from './user.js';
 import talkRouter from "./talk.js";
 import articleRouter from "./article.js";
+import albumRouter from "./album.js";
 
 const router = express.Router();
 
 router.use('/user', userRouter);
 router.use('/talk', talkRouter);
 router.use('/article', articleRouter);
+router.use('/album', albumRouter);
 
 // 健康检查接口
 router.get('/health', (req, res) => {
