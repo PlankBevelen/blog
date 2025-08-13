@@ -32,7 +32,8 @@
         </div>
     </TopBanner>
     <div class="article-detail">
-        <div class="container">   
+        <div class="container">  
+           
             <div class="article-detail__content">
                 <div class="markdown-content card
                 ">
@@ -44,9 +45,26 @@
                         showCodeRowNumber
                         :mdHeadingId="mdHeadingId"
                         @onGetCatalog="onGetCatalog"
-                        scrollAuto
-                        
+                        scrollAuto  
                     />
+
+                    <div class="score-section">
+                        <ArticleRating 
+                            :article-id="articleId"
+                            :average-score="article?.average_score || 0"
+                            @rating-submitted="updateAverageScore"
+                        />
+                    </div>
+
+                    <div class="comments-section">
+                        <ArticleCommentSection 
+                            :article-id="articleId" 
+                            @comment-added="updateCommentCount"
+                        />
+                    </div>
+
+                    <div class="score-section">
+                    </div>
                 </div>
 
                 <div class="markdown-catalog card">
@@ -80,6 +98,8 @@ import { MdEditor, MdCatalog, MdPreview } from 'md-editor-v3'
 import { formatDatetime } from '@/utils/format'
 import 'md-editor-v3/lib/style.css'
 import { useArticleStore } from '@/stores/article';
+import ArticleCommentSection from '@/components/article/ArticleCommentSection.vue';
+import ArticleRating from '@/components/article/ArticleRating.vue';
 
 const route = useRoute()
 const articleStore = useArticleStore()
@@ -111,6 +131,19 @@ async function getArticleDetail(id: number) {
     console.log(article.value?.content)
 
     loading.value = true
+}
+
+// 更新评论数量
+const updateCommentCount = (count: number) => {
+    if (article.value) {
+        article.value.comments_count = count
+    }
+}
+
+// 更新平均评分
+const updateAverageScore = async () => {
+    // 重新获取文章详情以更新平均分
+    await getArticleDetail(articleId.value)
 }
 
 onMounted(async () => { 

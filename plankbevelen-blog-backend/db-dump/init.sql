@@ -91,35 +91,6 @@ CREATE TABLE IF NOT EXISTS articles(
 	INDEX idx_articles_created_at (created_at)
 ) COMMENT '文章表';
 
--- 文章标签表
-CREATE TABLE IF NOT EXISTS article_tags(
-	id INT AUTO_INCREMENT PRIMARY KEY COMMENT '标签ID',
-	name VARCHAR(50) NOT NULL UNIQUE COMMENT '标签名称',
-	color VARCHAR(7) DEFAULT '#409EFF' COMMENT '标签颜色',
-	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
-) COMMENT '文章标签表';
-
--- 文章标签关联表
-CREATE TABLE IF NOT EXISTS article_tag_relations(
-	article_id INT NOT NULL COMMENT '文章ID',
-	tag_id INT NOT NULL COMMENT '标签ID',
-	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-	PRIMARY KEY (article_id, tag_id),
-	FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE,
-	FOREIGN KEY (tag_id) REFERENCES article_tags(id) ON DELETE CASCADE
-) COMMENT '文章标签关联表';
-
--- 文章点赞表
-CREATE TABLE IF NOT EXISTS article_likes(
-	article_id INT NOT NULL COMMENT '文章ID',
-	user_id INT NOT NULL COMMENT '用户ID',
-	is_like TINYINT NOT NULL DEFAULT 1 COMMENT '是否喜欢',
-	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '点赞时间',
-	UNIQUE KEY unique_like (article_id, user_id),
-	FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE,
-	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-) COMMENT '文章点赞表';
-
 -- 文章评论表
 CREATE TABLE IF NOT EXISTS article_comments(
 	id INT AUTO_INCREMENT PRIMARY KEY COMMENT '评论ID',
@@ -174,35 +145,21 @@ INSERT INTO article_tags (name, color) VALUES
 ('数据库', '#F56C6C'),
 ('算法', '#909399');
 
--- 相册分类表
-CREATE TABLE IF NOT EXISTS album_categories(
-    id INT AUTO_INCREMENT PRIMARY KEY COMMENT '分类ID',
-    name VARCHAR(50) NOT NULL COMMENT '分类名称',
-    description TEXT COMMENT '分类描述',
-    icon VARCHAR(100) COMMENT '分类图标',
-    sort_order INT DEFAULT 0 COMMENT '排序',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
-) COMMENT '相册分类表';
-
 -- 相册表
 CREATE TABLE IF NOT EXISTS albums(
     id INT AUTO_INCREMENT PRIMARY KEY COMMENT '相册ID',
     name VARCHAR(100) NOT NULL COMMENT '相册名称',
     description TEXT COMMENT '相册描述',
-    cover_image VARCHAR(255) COMMENT '封面图片',
-    category_id INT COMMENT '分类ID',
+    cover JSON COMMENT '封面图片',
     user_id INT NOT NULL COMMENT '创建用户ID',
-    photo_count INT DEFAULT 0 COMMENT '照片数量',
-    views INT DEFAULT 0 COMMENT '浏览量',
+    photos_count INT DEFAULT 0 COMMENT '照片数量',
+    views_count INT DEFAULT 0 COMMENT '浏览量',
 
     is_featured BOOLEAN DEFAULT FALSE COMMENT '是否推荐',
     is_private BOOLEAN DEFAULT FALSE COMMENT '是否私有',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    FOREIGN KEY (category_id) REFERENCES album_categories(id) ON DELETE SET NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_category (category_id),
     INDEX idx_user (user_id),
     INDEX idx_featured (is_featured),
     INDEX idx_private (is_private)
@@ -230,24 +187,9 @@ CREATE TABLE IF NOT EXISTS album_photos(
     INDEX idx_taken_at (taken_at)
 ) COMMENT '相册照片表';
 
-
-
--- 插入默认相册分类数据
-INSERT INTO album_categories (name, description, icon, sort_order) VALUES 
-('风景', '自然风光、城市景观等', 'landscape', 1),
-('人物', '人像摄影、生活照等', 'person', 2),
-('旅行', '旅游记录、游记等', 'travel', 3),
-('生活', '日常生活、随拍等', 'life', 4),
-('活动', '聚会、庆典、活动等', 'event', 5),
-('其他', '其他类型照片', 'other', 6);
-
--- 插入示例用户数据（如果不存在）
-INSERT IGNORE INTO users (nickname, email, password, avatar) VALUES 
-('管理员', 'admin@example.com', '$2b$10$example.hash.password', '/uploads/avatars/default.jpg');
-
 -- 插入示例相册数据
-INSERT INTO albums (name, description, cover_image, category_id, user_id, photo_count, views, is_featured, is_private) VALUES 
-('春日风光', '春天的美丽景色', '/uploads/albums/spring-cover.jpg', 1, 1, 12, 156, TRUE, FALSE),
-('旅行记录', '2024年春季旅行照片', '/uploads/albums/travel-cover.jpg', 3, 1, 25, 89, FALSE, FALSE),
-('日常生活', '生活中的美好瞬间', '/uploads/albums/life-cover.jpg', 4, 1, 8, 45, FALSE, FALSE),
-('人像摄影', '人物摄影作品集', '/uploads/albums/portrait-cover.jpg', 2, 1, 15, 78, TRUE, FALSE);
+INSERT INTO albums (name, description, cover, user_id, photos_count, views_count, is_featured, is_private) VALUES 
+('春日风光', '春天的美丽景色', '/uploads/albums/spring-cover.jpg', 1, 12, 156, TRUE, FALSE),
+('旅行记录', '2024年春季旅行照片', '/uploads/albums/travel-cover.jpg', 1, 25, 89, FALSE, FALSE),
+('日常生活', '生活中的美好瞬间', '/uploads/albums/life-cover.jpg', 1, 8, 45, FALSE, FALSE),
+('人像摄影', '人物摄影作品集', '/uploads/albums/portrait-cover.jpg', 1, 15, 78, TRUE, FALSE);

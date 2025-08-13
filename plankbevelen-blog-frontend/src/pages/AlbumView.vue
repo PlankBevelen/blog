@@ -144,10 +144,6 @@
                                         <svg-icon name="eye" size="14px" />
                                         {{ formatNumber(album.views) }}
                                     </span>
-                                    <span class="stat">
-                                        <svg-icon name="heart" size="14px" />
-                                        {{ formatNumber(album.likes) }}
-                                    </span>
                                 </div>
                                 
                                 <div class="meta-actions">
@@ -179,37 +175,16 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBanner from '@/components/TopBanner.vue'
+import { useAlbumStore } from '@/stores/album'
 import imagePath from '@/assets/images/album.jpg'
-
-// 类型定义
-interface Album {
-    id: number
-    name: string
-    description?: string
-    cover_image?: string
-    preview_images?: string[]
-    category_id: number
-    photo_count: number
-    views: number
-    likes: number
-    is_featured: boolean
-    is_private: boolean
-    created_at: string
-    updated_at: string
-}
-
-interface AlbumCategory {
-    id: number | null
-    name: string
-    icon: string
-}
+import type { Album, AlbumCategory } from '@/types/album'
 
 const router = useRouter()
+const albumStore = useAlbumStore()
 
 // 基础数据
 const title = ref('相册')
 const image = ref(imagePath)
-const loading = ref(false)
 
 // 筛选和分页
 const selectedCategory = ref<number | null>(null)
@@ -219,7 +194,7 @@ const pageSize = ref(12)
 
 // 分类数据
 const categories = ref<AlbumCategory[]>([
-    { id: null, name: '全部', icon: 'folder' },
+    { id: 0, name: '全部', icon: 'folder' },
     { id: 1, name: '旅行', icon: 'plane' },
     { id: 2, name: '生活', icon: 'home' },
     { id: 3, name: '美食', icon: 'utensils' },
@@ -228,124 +203,23 @@ const categories = ref<AlbumCategory[]>([
     { id: 6, name: '其他', icon: 'more' }
 ])
 
-// 相册数据
-const albums = ref<Album[]>([
-    {
-        id: 1,
-        name: '春日踏青记',
-        description: '春天的脚步轻盈而美好，记录下这个季节最美的瞬间',
-        cover_image: 'https://picsum.photos/400/300?random=1',
-        preview_images: [
-            'https://picsum.photos/60/60?random=11',
-            'https://picsum.photos/60/60?random=12',
-            'https://picsum.photos/60/60?random=13'
-        ],
-        category_id: 4,
-        photo_count: 24,
-        views: 1250,
-        likes: 89,
-        is_featured: true,
-        is_private: false,
-        created_at: '2024-03-15T10:30:00Z',
-        updated_at: '2024-03-20T14:20:00Z'
-    },
-    {
-        id: 2,
-        name: '日式料理制作',
-        description: '学习制作正宗日式料理的过程记录',
-        cover_image: 'https://picsum.photos/400/300?random=2',
-        preview_images: [
-            'https://picsum.photos/60/60?random=21',
-            'https://picsum.photos/60/60?random=22'
-        ],
-        category_id: 3,
-        photo_count: 16,
-        views: 892,
-        likes: 56,
-        is_featured: false,
-        is_private: false,
-        created_at: '2024-03-10T08:15:00Z',
-        updated_at: '2024-03-18T16:45:00Z'
-    },
-    {
-        id: 3,
-        name: '城市夜景',
-        description: '夜幕降临时城市的另一面，霓虹灯下的繁华与宁静',
-        cover_image: 'https://picsum.photos/400/300?random=3',
-        preview_images: [
-            'https://picsum.photos/60/60?random=31',
-            'https://picsum.photos/60/60?random=32',
-            'https://picsum.photos/60/60?random=33'
-        ],
-        category_id: 4,
-        photo_count: 32,
-        views: 1680,
-        likes: 124,
-        is_featured: true,
-        is_private: false,
-        created_at: '2024-03-05T19:30:00Z',
-        updated_at: '2024-03-15T21:10:00Z'
-    },
-    {
-        id: 4,
-        name: '家庭聚餐',
-        description: '温馨的家庭时光，记录与家人共度的美好时刻',
-        cover_image: 'https://picsum.photos/400/300?random=4',
-        preview_images: [
-            'https://picsum.photos/60/60?random=41',
-            'https://picsum.photos/60/60?random=42'
-        ],
-        category_id: 2,
-        photo_count: 18,
-        views: 456,
-        likes: 32,
-        is_featured: false,
-        is_private: true,
-        created_at: '2024-02-28T12:00:00Z',
-        updated_at: '2024-03-12T18:30:00Z'
-    },
-    {
-        id: 5,
-        name: '海边度假',
-        description: '蓝天白云，海风徐来，度假时光总是那么惬意',
-        cover_image: 'https://picsum.photos/400/300?random=5',
-        preview_images: [
-            'https://picsum.photos/60/60?random=51',
-            'https://picsum.photos/60/60?random=52',
-            'https://picsum.photos/60/60?random=53'
-        ],
-        category_id: 1,
-        photo_count: 45,
-        views: 2340,
-        likes: 198,
-        is_featured: true,
-        is_private: false,
-        created_at: '2024-02-20T09:00:00Z',
-        updated_at: '2024-03-08T15:20:00Z'
-    },
-    {
-        id: 6,
-        name: '朋友聚会',
-        description: '好友相聚的快乐时光，青春里最珍贵的回忆',
-        cover_image: 'https://picsum.photos/400/300?random=6',
-        preview_images: [
-            'https://picsum.photos/60/60?random=61',
-            'https://picsum.photos/60/60?random=62'
-        ],
-        category_id: 5,
-        photo_count: 28,
-        views: 678,
-        likes: 45,
-        is_featured: false,
-        is_private: false,
-        created_at: '2024-02-15T20:30:00Z',
-        updated_at: '2024-03-01T22:15:00Z'
-    }
-])
+// 响应式数据
+const loading = ref(false)
 
-// 计算属性
+// 统计数据
+const totalAlbums = computed(() => albumStore.albums.length)
+
+const totalPhotos = computed(() => {
+    let count = 0
+    albumStore.albums.forEach(album => {
+        count += album.photo_count
+    })
+    return count
+})
+
+// 筛选后的相册
 const filteredAlbums = computed(() => {
-    let filtered = [...albums.value]
+    let filtered = [...albumStore.albums]
     
     // 按分类筛选
     if (selectedCategory.value !== null) {
@@ -378,13 +252,11 @@ const paginatedAlbums = computed(() => {
 })
 
 const totalPages = computed(() => Math.ceil(filteredAlbums.value.length / pageSize.value))
-const totalAlbums = computed(() => albums.value.length)
-const totalPhotos = computed(() => albums.value.reduce((sum, album) => sum + album.photo_count, 0))
 
 // 方法
 const getCategoryCount = (categoryId: number | null): number => {
-    if (categoryId === null) return albums.value.length
-    return albums.value.filter(album => album.category_id === categoryId).length
+    if (categoryId === null) return albumStore.albums.length
+    return albumStore.albums.filter(album => album.category_id === categoryId).length
 }
 
 const getCategoryName = (categoryId: number): string => {
@@ -419,12 +291,36 @@ const goToAlbum = (albumId: number) => {
     router.push({ name: 'AlbumDetail', params: { id: albumId } })
 }
 
+
+
+const shareAlbum = (album: Album) => {
+    const url = `${window.location.origin}/album/detail/${album.id}`
+    navigator.clipboard.writeText(url).then(() => {
+        // ElMessage.success('相册链接已复制到剪贴板')
+        console.log('相册链接已复制到剪贴板')
+    }).catch(() => {
+        // ElMessage.error('复制失败')
+        console.log('复制失败')
+    })
+}
+
 // 生命周期
 onMounted(async () => {
     loading.value = true
-    // 模拟加载数据
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    loading.value = false
+    try {
+        // 尝试从store获取数据
+        await albumStore.getAlbums()
+        // 如果store中没有数据，使用模拟数据
+        if (albumStore.albums.length === 0) {
+            console.log('使用模拟数据')
+        }
+    } catch (error) {
+        console.error('获取相册数据失败，使用模拟数据:', error)
+    } finally {
+        // 模拟加载延迟
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        loading.value = false
+    }
 })
 </script>
 

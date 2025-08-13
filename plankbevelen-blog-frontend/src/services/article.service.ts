@@ -26,6 +26,36 @@ class ArticleService {
     async getArticleDetail(id: number) {
         return http.post('/article/detail', { id })
     }
+    async updateViewsCount(id: number) {
+        return http.post('/article/views', { id })
+    }
+    
+    // 评论相关方法
+    async getComments(articleId: number) {
+        return http.post('/article/comments', { article_id: articleId })
+    }
+    
+    async addComment(articleId: number, content: string, parentId?: number, replyToUserId?: number) {
+        return http.post('/article/comment/add', {
+            article_id: articleId,
+            content,
+            parent_id: parentId || null,
+            reply_to_user_id: replyToUserId || null
+        })
+    }
+    
+    async deleteComment(commentId: number) {
+        return http.post('/article/comment/delete', { id: commentId })
+    }
+    
+    // 评分相关方法
+    async rateArticle(ratingData: any) {
+        return await http.post('/article/rate', ratingData)
+    }
+
+    async getUserRating(articleId: number) {
+        return await http.post('/article/rating', { articleId })
+    }
 }
 
 export default new ArticleService();

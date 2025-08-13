@@ -5,7 +5,7 @@
         <img v-lazy="talk.avatar || '/default-avatar.svg'" alt="avatar" class="avatar" />
         <div class="user-details">
           <span class="nickname">{{ talk.nickname || '匿名用户' }}</span>
-          <span class="time">{{ formatTime(talk.create_at) }}</span>
+          <span class="time">{{ formatDate(talk.create_at) }}</span>
         </div>
       </div>
     </div>
@@ -52,6 +52,7 @@ import { ref, computed } from 'vue'
 import type { TalkEntity } from '@/types/talk'
 import talkService from '@/services/talk.service';
 import CommentSection from './CommentSection.vue'
+import { formatDate, formatDatetime } from '@/utils/format';
 
 interface Props {
   talk: TalkEntity
@@ -64,33 +65,6 @@ const isLiked = ref(false)
 const showComments = ref(false)
 // 评论数量
 const commentCount = ref(props.talk.comments_count || 0)
-
-// 格式化时间
-const formatTime = (time: string) => {
-  const date = new Date(time)
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-  
-  const minutes = Math.floor(diff / (1000 * 60))
-  const hours = Math.floor(diff / (1000 * 60 * 60))
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  
-  if (minutes < 1) {
-    return '刚刚'
-  } else if (minutes < 60) {
-    return `${minutes}分钟前`
-  } else if (hours < 24) {
-    return `${hours}小时前`
-  } else if (days < 7) {
-    return `${days}天前`
-  } else {
-    return date.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
-}
 
 // 节流控制
 const isLiking = ref(false)

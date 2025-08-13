@@ -1,7 +1,7 @@
 import http from '@/utils/http-common'
 import { cookie } from '@/utils/cookie'
 import { defineStore } from 'pinia'
-import type { ArticleCategory, ArticleCreateRequest, ArticleEntity } from '@/types/article'
+import type { ArticleCategory, ArticleCreateRequest, ArticleEntity, ArticleComment, ArticleRating, RatingRequest } from '@/types/article'
 import articleService from '@/services/article.service'
 
 export const useArticleStore = defineStore('article', {
@@ -107,6 +107,130 @@ export const useArticleStore = defineStore('article', {
             } catch (error) {
                 console.log(error)
                 return false
+            }
+        },
+
+        // 更新浏览量
+        async updateViewsCount(id: number) : Promise<Boolean> {
+            try {
+                const res = await articleService.updateViewsCount(id)
+                if(res.status === 200) {
+                    // 更新数据
+                    this.published_articles.forEach(item => {
+                        if(item.id === id) {
+                            item.views_count++
+                        }
+                    })
+                    this.all_articles.forEach(item => {
+                        if(item.id === id) {
+                            item.views_count++
+                        }
+                    })
+                    return true
+                } else {
+                    return false
+                }
+            } catch (error) {
+                console.log(error)
+                return false
+            }
+        },
+
+        // 评论相关方法
+        async getComments(articleId: number): Promise<ArticleComment[]> {
+            try {
+                const res = await articleService.getComments(articleId)
+                if (res.status === 200) {
+                    return res.data
+                } else {
+                    return []
+                }
+            } catch (error) {
+                console.log(error)
+                return []
+            }
+        },
+
+        /* async addComment(commentData: any): Promise<boolean> {
+            try {
+                const res = await articleService.addComment(commentData)
+                if (res.status === 200) {
+                    // 更新文章评论数
+                    this.published_articles.forEach(item => {
+                        if (item.id === commentData.article_id) {
+                            item.comments_count++
+                        }
+                    })
+                    this.all_articles.forEach(item => {
+                        if (item.id === commentData.article_id) {
+                            item.comments_count++
+                        }
+                    })
+                    return true
+                } else {
+                    return false
+                }
+            } catch (error) {
+                console.log(error)
+                return false
+            }
+        }, */
+
+        async deleteComment(commentId: number, articleId: number): Promise<boolean> {
+            try {
+                const res = await articleService.deleteComment(commentId)
+                if (res.status === 200) {
+                    // 重新获取评论数量（因为删除可能是递归的）
+                    const comments = await this.getComments(articleId)
+                    const newCount = comments.length
+                    
+                    // 更新文章评论数
+                    this.published_articles.forEach(item => {
+                        if (item.id === articleId) {
+                            item.comments_count = newCount
+                        }
+                    })
+                    this.all_articles.forEach(item => {
+                        if (item.id === articleId) {
+                            item.comments_count = newCount
+                        }
+                    })
+                    return true
+                } else {
+                    return false
+                }
+            } catch (error) {
+                console.log(error)
+                return false
+            }
+        },
+
+        // 评分相关方法
+        async rateArticle(ratingData: RatingRequest): Promise<boolean> {
+            try {
+                const res = await articleService.rateArticle(ratingData)
+                if (res.status === 200) {
+                    return true
+                } else {
+                    return false
+                }
+            } catch (error) {
+                console.log(error)
+                return false
+            }
+        },
+
+        async getUserRating(articleId: number): Promise<ArticleRating | null> {
+            try {
+                const res = await articleService.getUserRating(articleId)
+                if (res.status === 200 && res.data) {
+                    return res.data
+                } else {
+                    return null
+                }
+            } catch (error) {
+                console.log(error)
+                return null
             }
         }
     }

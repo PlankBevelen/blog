@@ -77,7 +77,7 @@
                 <!-- 热门文章 -->
                 <div class="popular-articles card">
                     <div class="popular-articles__header">
-                        <svg-icon name="fire" size="18px" />
+                        <svg-icon name="fire" size="16px" color="var(--text-color)"/>
                         <span>热门文章</span>
                     </div>
                     <div class="popular-articles__content">
@@ -107,7 +107,7 @@
                 <!-- 最新文章 -->
                 <div class="recent-articles card">
                     <div class="recent-articles__header">
-                        <svg-icon name="time" size="18px" />
+                        <svg-icon name="clock" size="16px" color="var(--text-color)"/>
                         <span>最新文章</span>
                     </div>
                     <div class="recent-articles__content">
@@ -228,7 +228,9 @@ const handlePageChange = (page: number) => {
 }
 
 const goToArticle = (id: number) => {
-  router.push({ name: 'ArticleDetail', query: { id } })
+    // 新增点击浏览
+    articleStore.updateViewsCount(id);
+    router.push({ name: 'ArticleDetail', query: { id } })
 }
 
 // 获取特定分类的文章数量

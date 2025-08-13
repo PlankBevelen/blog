@@ -27,6 +27,6 @@ export interface Comment {
   created_at: string
   nickname: string
   avatar: string
-  reply_to_nickname?: string
+  reply_to_nickname?: string | null
 }
 

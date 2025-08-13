@@ -24,3 +24,29 @@ export interface ArticleCategory {
   name: string
   article_count: number
 }
+
+export interface ArticleComment {
+  id: number
+  article_id: number
+  user_id: number
+  parent_id: number | null
+  reply_to_user_id: number | null
+  content: string
+  created_at: string
+  nickname: string
+  avatar: string
+  reply_to_nickname?: string | null
+}
+
+export interface ArticleRating {
+  id: number
+  article_id: number
+  user_id: number
+  score: number
+  created_at: string
+}
+
+export interface RatingRequest {
+  article_id: number
+  score: number
+}

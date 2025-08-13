@@ -28,7 +28,7 @@
           <span>{{ article.average_score ? article.average_score : '0.0' }}</span>
         </div>
         <div class="stat-item">
-          <svg-icon name="time" size="14px" />
+          <svg-icon name="time" size="14px" color="var(--text-color)" />
           <span>{{ formatDate(article.created_at) }}</span>
         </div>
       </div>
