@@ -31,18 +31,30 @@
             <!-- 工具栏 -->
             <div class="album-detail-toolbar card" v-if="isOwnSelf">
                 <div class="toolbar-left">
-                    <el-button type="primary" @click="showUploadDialog = true">
+                    <el-button type="primary" @click="showUploadDialog = true" v-if="!selectionMode">
                         <svg-icon name="upload" size="16px" />
                         上传照片
                     </el-button>
-                    <el-button 
-                        v-if="selectedPhotos.length > 0" 
-                        type="danger" 
-                        @click="handleBatchDelete"
-                    >
-                        <svg-icon name="delete" size="16px" />
-                        删除选中 ({{ selectedPhotos.length }})
-                    </el-button>
+                    
+                    <!-- 选择模式下的操作按钮 -->
+                    <template v-if="selectionMode">
+                        <el-button @click="handleSelectAll">
+                            <svg-icon name="check" size="16px" />
+                            全选
+                        </el-button>
+                        <el-button @click="handleClearSelection" v-if="selectedPhotos.length > 0">
+                            <svg-icon name="close" size="16px" />
+                            清空选择
+                        </el-button>
+                        <el-button 
+                            v-if="selectedPhotos.length > 0" 
+                            type="danger" 
+                            @click="handleBatchDelete"
+                        >
+                            <svg-icon name="delete" size="16px" />
+                            删除选中 ({{ selectedPhotos.length }})
+                        </el-button>
+                    </template>
                 </div>
                 <div class="toolbar-right">
                     <el-switch
@@ -65,9 +77,10 @@
                 
                 <div class="photo-grid-container">
                     <VirtualPhotoGrid 
+                        ref="photoGridRef"
                         :albumId="albumId" 
                         :selectionMode="selectionMode"
-                        
+                        @selection-change="handleSelectionChange"
                     />
                 </div>
             </div>
@@ -132,7 +145,7 @@ import TopBanner from '@/components/TopBanner.vue'
 import VirtualPhotoGrid from '@/components/VirtualPhotoGrid.vue'
 import { useAlbumStore } from '@/stores/album'
 import { usePhotoStore } from '@/stores/photo'
-import { onMounted, onUnmounted, computed, ref, nextTick } from 'vue'
+import { onMounted, onUnmounted, computed, ref, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { formatDatetime } from '@/utils/format'
 import { useUserStore } from '@/stores/user'
@@ -151,12 +164,22 @@ const showUploadDialog = ref(false)
 const uploading = ref(false)
 const uploadImageList = ref<string[]>([])
 const uploadRef = ref()
+const photoGridRef = ref()
 const selectionMode = ref(false)
 const selectedPhotos = ref<number[]>([])
 
 // 计算属性
 const isOwnSelf = computed(() => {
     return albumStore.albumDetail.user_id === userStore.userInfo?.id
+})
+
+// 监听选择模式变化
+watch(selectionMode, (newValue) => {
+    if (!newValue) {
+        // 退出选择模式时清空选择
+        selectedPhotos.value = []
+        photoGridRef.value?.clearSelection()
+    }
 })
 
 // 生命周期
@@ -169,14 +192,19 @@ const loadPhotos = async () => {
     await photoStore.fetchPhotosByAlbum(albumId)
 }
 
-// 接受点击的photo的id
-const togglePhotoSelection = (photoId: number) => {
-    const index = selectedPhotos.value.indexOf(photoId)
-    if (index > -1) {
-        selectedPhotos.value.splice(index, 1)
-    } else {
-        selectedPhotos.value.push(photoId)
-    }
+// 处理选择变化
+const handleSelectionChange = (selectedIds: number[]) => {
+    selectedPhotos.value = selectedIds
+}
+
+// 全选
+const handleSelectAll = () => {
+    photoGridRef.value?.selectAll()
+}
+
+// 清空选择
+const handleClearSelection = () => {
+    photoGridRef.value?.clearSelection()
 }
 
 // 批量删除
@@ -195,9 +223,16 @@ const handleBatchDelete = async () => {
         )
         
         await photoStore.deletePhotos(selectedPhotos.value)
+        
+        // 清空选择并退出选择模式
         selectedPhotos.value = []
+        photoGridRef.value?.clearSelection()
         selectionMode.value = false
+        
         ElMessage.success('照片删除成功')
+        
+        // 重新加载相册详情以更新照片数量
+        await albumStore.fetchAlbumDetail(albumId)
     } catch (error) {
         if (error !== 'cancel') {
             ElMessage.error('删除失败')

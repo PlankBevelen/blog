@@ -99,11 +99,11 @@ const totalCount = ref(0)
 
 // 统计数据
 const talkCount = ref(0)
-const outputTalkCount = useTransition(talkCount, { duration : 2 * 1000 })
+const outputTalkCount = useTransition(talkCount, { duration : 1 * 1000 })
 const photoCount = ref(0)
-const outputPhotoCount = useTransition(photoCount, { duration : 2 * 1000 })
-const commentCount = ref(10)
-const outputCommentCount = useTransition(commentCount, { duration : 2 * 1000 })
+const outputPhotoCount = useTransition(photoCount, { duration : 1 * 1000 })
+const commentCount = ref(0)
+const outputCommentCount = useTransition(commentCount, { duration : 1 * 1000 })
 
 // 分页数据
 const paginatedTalks = computed(() => {
@@ -123,7 +123,7 @@ const fetchPublishedTalks = async () => {
     // 更新统计数据
     talkCount.value = talks.value.length
     photoCount.value = talks.value.reduce((count, talk) => count + (talk.images?.length || 0), 0)
-    commentCount.value = 0 // TODO: 实际评论数
+    commentCount.value = talks.value.reduce((count, talk) => count + (talk.comments_count || 0), 0)
   } catch (error) {
     console.error('获取说说失败:', error)
     ElMessage.error('获取说说失败')

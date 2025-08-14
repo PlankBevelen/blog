@@ -7,9 +7,24 @@
             <!-- 帖子 -->
             <div class="left-side">
                 <!-- 文章列表（只显示置顶） -->
-                <div class="article-list">
-                    
+                <div class="article-list" >
+                    <HomeArticle 
+                        :coverLeft="index % 2 === 1" 
+                        v-for="(article, index) in paginationArticle"
+                        :key="index"
+                        :article="article"
+                        @click="goToArticle(article)"
+                    />
                 </div>
+                <el-pagination
+                    :current-page="currentPage"
+                    :page-size="pageSize"
+                    :pager-count="4"
+                    :change="handlePageChange"
+                    layout="total, sizes, prev, pager, next"
+                    :total="articleStore.top_articles.length"
+                    background
+                />
             </div>
             <!-- 侧边栏 -->
             <div class="right-side">
@@ -32,7 +47,7 @@
                             <span class="value">10</span>
                         </div>
                         <div class="item">
-                            <span class="title">标签</span>
+                            <span class="title">说说</span>
                             <span class="value">10</span>
                         </div>
                     </div>
@@ -90,6 +105,14 @@
 import TopBanner from '@/components/TopBanner.vue';
 import TypeWriter from '@/components/TypeWriter.vue';
 import homeImage from '@/assets/images/home.jpg';
+import { useArticleStore } from '@/stores/article';
+import { onMounted, ref, computed } from 'vue';
+import HomeArticle from '@/components/article/HomeArticle.vue';
+import { useRouter } from 'vue-router';
+import type { ArticleEntity } from '@/types/article';
+
+const router = useRouter();
+const articleStore = useArticleStore();
 
 const imagePath = homeImage;
 const title = 'Welcome to PlankBevelen\'s Blog';
@@ -98,9 +121,32 @@ const textArr = [
     "Arrogant Until Death."
 ]
 
+// 分页
+const currentPage = ref(1)
+const pageSize = ref(5)
+
+const paginationArticle = computed(() => {
+    return articleStore.top_articles.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value)
+})
+
+// 换页
+const handlePageChange = (page: number) => {
+    currentPage.value = page
+}
+
+
 const goToGithub = () => {
     window.open('https://github.com/plankbevelen');
 }
+
+const goToArticle = (article: ArticleEntity) => {
+    router.push({name: 'ArticleDetail', query: { id: article.id }})
+}
+
+onMounted( async () => {
+    await articleStore.initArticleStore();
+    await articleStore.fetchTopArticles();
+})
 
 </script>
 
