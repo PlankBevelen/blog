@@ -2,30 +2,15 @@
 export interface Album {
     id: number
     name: string
-    description?: string
-    cover?: string
+    description: string
+    cover: string
     preview_images?: string[]
     photos_count: number
     views_count: number
+    user_id?: number
 
     is_featured: boolean
     is_private: boolean
-    created_at: string
-    updated_at: string
-}
-
-// 照片类型定义
-export interface Photo {
-    id: number
-    name: string
-    url: string
-    thumbnail_url?: string
-    size: number
-    width: number
-    height: number
-    description?: string
-    tags?: string[]
-    album_id: number
     created_at: string
     updated_at: string
 }
@@ -34,9 +19,9 @@ export interface Photo {
 export interface CreateAlbumRequest {
     id?: number
     name: string
-    description?: string
-    cover?: string
-    is_private?: boolean
+    description: string
+    cover: string
+    is_private: boolean
 }
 
 // 更新相册请求类型
@@ -55,8 +40,6 @@ export interface UploadPhotoRequest {
     description?: string
     tags?: string[]
 }
-
-
 
 // 相册查询参数类型
 export interface AlbumQueryParams {
@@ -79,14 +62,6 @@ export interface PhotoQueryParams {
 // API响应类型
 export interface AlbumListResponse {
     albums: Album[]
-    total: number
-    page: number
-    pageSize: number
-    totalPages: number
-}
-
-export interface PhotoListResponse {
-    photos: Photo[]
     total: number
     page: number
     pageSize: number

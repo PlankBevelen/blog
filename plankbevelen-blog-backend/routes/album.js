@@ -61,4 +61,16 @@ router.post('/delete', authenticateToken, async (req, res) => {
     }
 })
 
+// 获取相册详情
+router.post('/detail', async (req, res) => {
+    try {
+        const { album_id } = req.body
+        const album = await albumService.getAlbumDetail(album_id)
+        res.status(200).json(album)
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: error.message })
+    }
+})
+
 export default router;

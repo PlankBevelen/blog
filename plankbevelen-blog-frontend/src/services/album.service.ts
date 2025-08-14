@@ -1,8 +1,6 @@
 import http from '@/utils/http-common'
 
 import type {
-    Album,
-    Photo,
     CreateAlbumRequest,
     UpdateAlbumRequest
 } from '@/types/album'
@@ -10,6 +8,9 @@ import type {
 export class AlbumService {
     async getAllAlbums() {
         return http.post('/album') 
+    }
+    async getAlbumDetail(albumId: number) {
+        return http.post('/album/detail', { album_id: albumId })
     }
     async createAlbum(albumData: CreateAlbumRequest) {
         return http.post('/album/create', albumData)

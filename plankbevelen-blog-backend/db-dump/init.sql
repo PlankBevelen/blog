@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS articles(
 	title VARCHAR(255) NOT NULL COMMENT '文章标题',
 	summary TEXT COMMENT '文章摘要',
 	content LONGTEXT COMMENT '文章内容',
-	cover VARCHAR(500) COMMENT '封面图片URL',
+	cover JSON COMMENT '封面图片',
 	category_id INT NOT NULL COMMENT '分类ID',
 	user_id INT NOT NULL COMMENT '作者ID',
 	views_count INT DEFAULT 0 COMMENT '浏览次数',
@@ -170,21 +170,11 @@ CREATE TABLE IF NOT EXISTS album_photos(
     id INT AUTO_INCREMENT PRIMARY KEY COMMENT '照片ID',
     album_id INT NOT NULL COMMENT '相册ID',
     filename VARCHAR(255) NOT NULL COMMENT '文件名',
-    original_name VARCHAR(255) NOT NULL COMMENT '原始文件名',
-    file_path VARCHAR(500) NOT NULL COMMENT '文件路径',
-    url VARCHAR(500) NOT NULL COMMENT '访问URL',
-    thumbnail_url VARCHAR(500) COMMENT '缩略图URL',
-    thumbnail_path VARCHAR(500) COMMENT '缩略图路径',
+    photo JSON NOT NULL COMMENT '照片数据',
     description TEXT COMMENT '照片描述',
-    tags JSON COMMENT '照片标签',
-    size BIGINT NOT NULL COMMENT '文件大小(字节)',
-    width INT DEFAULT 0 COMMENT '图片宽度',
-    height INT DEFAULT 0 COMMENT '图片高度',
-    taken_at TIMESTAMP NULL COMMENT '拍摄时间',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     FOREIGN KEY (album_id) REFERENCES albums(id) ON DELETE CASCADE,
-    INDEX idx_album (album_id),
-    INDEX idx_taken_at (taken_at)
+    INDEX idx_album (album_id)
 ) COMMENT '相册照片表';
 
 -- 插入示例相册数据

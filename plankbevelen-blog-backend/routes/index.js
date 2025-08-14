@@ -3,6 +3,7 @@ import userRouter from './user.js';
 import talkRouter from "./talk.js";
 import articleRouter from "./article.js";
 import albumRouter from "./album.js";
+import photoRouter from "./photo.js";
 
 const router = express.Router();
 
@@ -10,6 +11,7 @@ router.use('/user', userRouter);
 router.use('/talk', talkRouter);
 router.use('/article', articleRouter);
 router.use('/album', albumRouter);
+router.use('/photo', photoRouter);
 
 // 健康检查接口
 router.get('/health', (req, res) => {

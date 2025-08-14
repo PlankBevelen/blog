@@ -4,15 +4,16 @@ import { ElMessage } from 'element-plus'
 import { albumService } from '@/services/album.service'
 import type {
     Album,
-    Photo,
     CreateAlbumRequest,
-    UpdateAlbumRequest
+    UpdateAlbumRequest,
+    AlbumListResponse
+
 } from '@/types/album'
 
 export const useAlbumStore = defineStore('album', {
     state: () => ({
-        albums: [] as Album[],
-        photos: [] as Photo[],
+        albums: [] as Album[],  
+        albumDetail: {} as Album,
     }),
     getters: {
         getAlbums: (state) => state.albums,
@@ -35,7 +36,9 @@ export const useAlbumStore = defineStore('album', {
                     this.albums.push({id: res.data.insertId, ...albumData, 
                         photos_count: 0, views_count: 0, is_featured: false, is_private: false,
                         created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
-                        preview_images: []})
+                        preview_images: [] as string[],
+                        user_id: res.data.user_id
+                    })
                 } else {
                     ElMessage.error('创建相册失败')
                 }
@@ -68,6 +71,22 @@ export const useAlbumStore = defineStore('album', {
             } catch (error) {
                 ElMessage.error('删除相册失败')
             }
+        },
+
+        async fetchAlbumDetail(albumId: number) {
+            try {
+                const res = await albumService.getAlbumDetail(albumId)
+                if (res.status === 200) {
+                    this.albumDetail = res.data[0]
+
+                    ElMessage.success('获取相册详情成功')
+                } else {
+                    ElMessage.error('获取相册详情失败')
+                }
+            } catch (error) {
+                ElMessage.error('获取相册详情失败')
+            }
         }
+
     }
 })
