@@ -103,6 +103,7 @@ talkRouter.post('/:id/comment', authenticateToken, async (req, res) => {
             parent_id: parent_id || null,
             reply_to_user_id: reply_to_user_id || null
         };
+        
         const comment = await talkService.addComment(commentData);
         res.status(200).json(comment);
     } catch (error) {
@@ -121,6 +122,17 @@ talkRouter.delete('/:talkId/comment/:commentId', authenticateToken, async (req, 
     }
 })
 
+// 获取用户对说说的点赞状态
+talkRouter.post('/:id/like-status', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.userId;
+        const result = await talkService.getUserLikeStatus(Number(id), userId);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+})
 
 export default talkRouter;
 

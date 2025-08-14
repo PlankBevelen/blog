@@ -56,6 +56,10 @@ class ArticleService {
     async getUserRating(articleId: number) {
         return await http.post('/article/rating', { articleId })
     }
+
+    async getTopArticle() {
+        return await http.get('/article/top')
+    }
 }
 
 export default new ArticleService();

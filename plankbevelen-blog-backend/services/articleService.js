@@ -116,6 +116,19 @@ class ArticleService {
         })
     }
 
+    async getTopArticle() {
+        return new Promise((resolve, reject) => {
+            pool.query('SELECT * FROM articles WHERE is_top = 1 ORDER BY views_count DESC, comments_count DESC, average_score DESC', (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            })
+        })
+    }
+
+
     async updateArticle(articleData) {
         return new Promise((resolve, reject) => {
             const { id, title, category_id, summary, content, cover, tags, status, is_top } = articleData;

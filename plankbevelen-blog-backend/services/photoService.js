@@ -29,6 +29,41 @@ class PhotoService {
             });
         })
     }
+
+    // 删除单张照片
+    async deletePhoto(photoId) {
+        return new Promise((resolve, reject) => {
+            const query = 'DELETE FROM album_photos WHERE id = ?';
+            pool.query(query, [photoId], (err, result) => {
+                if (err) {
+                    console.error('Database error:', err);
+                    reject(err);
+                } else {
+                    resolve({ success: true, affectedRows: result.affectedRows });
+                }
+            });
+        });
+    }
+
+    // 批量删除照片
+    async deletePhotos(photoIds) {
+        return new Promise((resolve, reject) => {
+            if (!photoIds || photoIds.length === 0) {
+                resolve({ success: true, affectedRows: 0 });
+                return;
+            }
+            
+            const query = 'DELETE FROM album_photos WHERE id IN (?)';
+            pool.query(query, [photoIds], (err, result) => {
+                if (err) {
+                    console.error('Database error:', err);
+                    reject(err);
+                } else {
+                    resolve({ success: true, affectedRows: result.affectedRows });
+                }
+            });
+        });
+    }
 }
 
 export default new PhotoService();

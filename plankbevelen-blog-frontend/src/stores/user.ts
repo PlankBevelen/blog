@@ -38,7 +38,6 @@ export const useUserStore = defineStore('user', {
                 
                 // 如果有token但没有userInfo，尝试获取用户信息
                 if (token && refreshToken && !userInfo) {
-                    console.log('检测到token存在但userInfo缺失，正在获取用户信息...')
                     const result = await this.fetchUserProfile()
                     if (result.success) {
                         this.isLoggedIn = true
@@ -50,10 +49,6 @@ export const useUserStore = defineStore('user', {
                 } else {
                     this.isLoggedIn = !!(token && refreshToken && userInfo)
                 }
-                
-                console.log('最终状态 - isLoggedIn:', this.isLoggedIn)
-                console.log('最终状态 - userInfo:', this.userInfo)
-                console.log('=== 用户状态初始化完成 ===')
                 
             } catch (error) {
                 console.error('初始化用户态失败', error)

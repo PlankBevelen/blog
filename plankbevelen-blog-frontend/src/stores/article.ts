@@ -9,6 +9,7 @@ export const useArticleStore = defineStore('article', {
         categories: [] as ArticleCategory[],
         all_articles: [] as ArticleCreateRequest[],
         published_articles: [] as ArticleEntity[],
+        top_articles: [] as ArticleEntity[],
         total: 0,
     }),
     getters: {
@@ -32,6 +33,7 @@ export const useArticleStore = defineStore('article', {
         getRecentArticles: (state) => {
             return state.published_articles.sort((a, b) => b.id - a.id).slice(0, 5)
         },
+
     },
     actions: {
         async initArticleStore() {
@@ -108,6 +110,18 @@ export const useArticleStore = defineStore('article', {
                 console.log(error)
                 return false
             }
+        },
+
+        // 置顶文章
+        async fetchTopArticles() {
+            await articleService.getTopArticle().then(res => {
+                if (res.status === 200) {
+                    this.top_articles = res.data
+                } else {
+                    this.top_articles = []
+                }
+            })
+
         },
 
         // 更新浏览量

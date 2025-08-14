@@ -43,6 +43,11 @@ const router = createRouter({
           component: () => import('@/pages/AlbumDetail.vue')
         },
         {
+          path: '/message',
+          name: 'Message',
+          component: () => import('@/pages/MessageView.vue')
+        },
+        {
           path: '/login',
           name: 'Login',
           component: () => import('@/pages/LoginView.vue')

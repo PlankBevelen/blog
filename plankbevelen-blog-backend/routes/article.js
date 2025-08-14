@@ -70,6 +70,22 @@ articleRouter.post('/top', authenticateToken, async (req, res) => {
     }
 })
 
+articleRouter.get('/top', async (req, res) => {
+    try {
+        const articles = await articleService.getTopArticle()
+        articles.forEach(article => {
+            article.is_top = Boolean(article.is_top)
+            article.views_count = Number(article.views_count)
+            article.comments_count = Number(article.comments_count)
+            article.average_score = Number(article.average_score).toFixed(1)
+        })
+        res.status(200).json(articles)
+    } catch (err) {
+        res.status(500).json({ message: err.message })
+    }
+})
+
+
 articleRouter.post('/update', async (req, res) => {
     try {
         const { id, title, category_id, summary, content, cover, tags, status, is_top } = req.body

@@ -32,6 +32,28 @@ photoRouter.post('/upload', async (req, res) => {
     }
 })
 
+// 删除单张照片
+photoRouter.post('/delete', async (req, res) => {
+    const { photo_id } = req.body;
+    try {
+        const result = await photoService.deletePhoto(photo_id);
+        res.status(200).json(result);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
+// 批量删除照片
+photoRouter.post('/delete/batch', async (req, res) => {
+    const { photo_ids } = req.body;
+    try {
+        const result = await photoService.deletePhotos(photo_ids);
+        res.status(200).json(result);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 export default photoRouter;

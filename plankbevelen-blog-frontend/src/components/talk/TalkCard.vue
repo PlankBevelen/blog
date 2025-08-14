@@ -29,10 +29,10 @@
     <div class="talk-actions">
       <div class="action-item" @click="handleLike">
         <svg-icon name="like" :class="{ active: isLiked }" color="var(--talk-color)" size="1.15em"/>
-        <span>{{ talk.likes_count || 0 }}</span>
+        <span :class="{ active: isLiked }">{{ talk.likes_count || 0 }}</span>
       </div>
       <div class="action-item" @click="handleComment" >
-        <svg-icon name="comment" :class="{ active: isLiked }" color="var(--talk-color)"/>
+        <svg-icon name="comment" color="var(--talk-color)"/>
         <span>{{ commentCount }}</span>
       </div>
     </div>
@@ -48,17 +48,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import type { TalkEntity } from '@/types/talk'
 import talkService from '@/services/talk.service';
 import CommentSection from './CommentSection.vue'
 import { formatDate, formatDatetime } from '@/utils/format';
+import { useUserStore } from '@/stores/user';
 
 interface Props {
   talk: TalkEntity
 }
 
 const props = defineProps<Props>()
+const userStore = useUserStore()
 
 const isLiked = ref(false)
 // 评论显示状态
@@ -109,11 +111,32 @@ const updateCommentCount = (count: number) => {
   commentCount.value = count
 }
 
+// 获取用户点赞状态
+const fetchLikeStatus = async () => {
+  if (!userStore.isLoggedIn) {
+    return
+  }
+  
+  try {
+    const res = await talkService.getLikeStatus(props.talk.id)
+    if (res.status === 200) {
+      isLiked.value = res.data.isLiked
+    }
+  } catch (error) {
+    console.error('获取点赞状态失败:', error)
+  }
+}
+
 // 图片预览
 const previewImage = (image: string, index: number) => {
   // TODO: 实现图片预览功能
   console.log('预览图片:', image, index)
 }
+
+// 组件挂载时获取点赞状态
+onMounted(() => {
+  fetchLikeStatus()
+})
 </script>
 
 <style lang="less" scoped>
@@ -244,7 +267,13 @@ const previewImage = (image: string, index: number) => {
         font-size: 16px;
         
         &.active {
-          color: var(--primary-color);
+          color: var(--primary-color) !important;
+        }
+      }
+
+      span {
+        &.active {
+          color: var(--primary-color) !important;
         }
       }
     }

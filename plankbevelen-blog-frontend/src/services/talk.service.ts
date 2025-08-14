@@ -65,6 +65,11 @@ class TalkService {
     async comment(id: number, comment: string) {
         return this.addComment(id, comment)
     }
+
+    // 获取用户对说说的点赞状态
+    async getLikeStatus(id: number) {
+        return http.post(`/talk/${id}/like-status`)
+    }
 }
 
 export default new TalkService()

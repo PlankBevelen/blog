@@ -5,11 +5,15 @@
       v-for="(photo, index) in photoStore.photos"  
       :key="photo.id"
       class="photo-item" 
+      :class="{ selected: selectedPhotos.has(photo.id) }"
       :style="{ height: photoSize, width: photoSize }"
-      @click="openPhotoViewer(index)" >
+      @click="handlePhotoClick(photo, index)" >
       <img v-lazy="photo.photo" alt="图片" class="photo-image" />
       <div class="photo-checkBox" v-if="selectionMode">
-        <el-checkbox :label="photo.id" />
+        <el-checkbox 
+          :model-value="selectedPhotos.has(photo.id)" 
+          @change="toggleSelection(photo.id)"
+          @click.stop />
       </div>
     </div>
 
@@ -80,12 +84,17 @@ const props = defineProps({
   }
 })
 
+const emit = defineEmits(['selection-change'])
+
 const photoStore = usePhotoStore();
 
 // 图片查看器状态
 const showViewer = ref(false);
 const currentIndex = ref(0);
 const imageLoading = ref(false);
+
+// 选择状态
+const selectedPhotos = ref(new Set())
 
 // 规定图片大小
 const photoSize = '200px';
@@ -150,6 +159,28 @@ const handleScroll = async () => {
   }
 }
 
+// 处理图片点击事件
+const handlePhotoClick = (photo: any, index: number) => {
+  if (props.selectionMode) {
+    // 选择模式下，点击图片等同于点击checkbox
+    toggleSelection(photo.id);
+  } else {
+    // 非选择模式下，打开图片查看器
+    openPhotoViewer(index);
+  }
+}
+
+// 切换选择状态
+const toggleSelection = (photoId: number) => {
+  if (selectedPhotos.value.has(photoId)) {
+    selectedPhotos.value.delete(photoId);
+  } else {
+    selectedPhotos.value.add(photoId);
+  }
+  // 触发选择变化事件
+  emit('selection-change', Array.from(selectedPhotos.value));
+}
+
 // 图片查看器方法
 const openPhotoViewer = (index: number) => {
   currentIndex.value = index;
@@ -207,6 +238,31 @@ onMounted(() => {
   window.addEventListener('keydown', handleKeydown);
 });
 
+// 选择管理方法
+const clearSelection = () => {
+  selectedPhotos.value.clear();
+  emit('selection-change', []);
+}
+
+const selectAll = () => {
+  photoStore.photos.forEach(photo => {
+    selectedPhotos.value.add(photo.id);
+  });
+  emit('selection-change', Array.from(selectedPhotos.value));
+}
+
+const getSelectedCount = () => {
+  return selectedPhotos.value.size;
+}
+
+// 暴露方法给父组件
+defineExpose({
+  clearSelection,
+  selectAll,
+  getSelectedCount,
+  selectedPhotos: selectedPhotos.value
+})
+
 // 清理事件监听
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll);
@@ -223,18 +279,42 @@ onUnmounted(() => {
   grid-template-columns: repeat(6, 1fr);
   grid-gap: 16px;
   .photo-item {
+    position: relative;
     &:hover {
       .photo-image {
         transform: scale(1.05);
       }
       cursor: pointer;
     }
+    
+    // 选中状态样式
+    &.selected {
+      .photo-image {
+        opacity: 0.7;
+        border: 2px solid #409eff;
+      }
+    }
+    
     .photo-image {
+      z-index: 1;
       width: 100%;
       height: 100%;
       object-fit: cover;
       border-radius: 8px;
-      transition: transform 0.3s ease;
+      transition: all 0.3s ease;
+    }
+    
+    .photo-checkBox {
+      position: absolute;
+      z-index: 100;
+      top: 4px;
+      right: 8px;
+      border-radius: 4px;
+
+      /deep/ .el-checkbox__inner{
+        width: 20px;
+        height: 20px;
+      }
     }
   }
 }

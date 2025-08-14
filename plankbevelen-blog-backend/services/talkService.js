@@ -189,6 +189,21 @@ class TalkService {
                 }
             });
         });
+    }
+
+    // 获取用户对说说的点赞状态
+    async getUserLikeStatus(talkId, userId) {
+        return new Promise((resolve, reject) => {
+            pool.query('SELECT is_like FROM talk_likes WHERE talk_id = ? AND user_id = ?', [talkId, userId], (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    // 如果没有记录，返回false；如果有记录，返回is_like的值
+                    const isLiked = result.length > 0 ? Boolean(result[0].is_like) : false;
+                    resolve({ isLiked });
+                }
+            });
+        });
     }       
 }
 

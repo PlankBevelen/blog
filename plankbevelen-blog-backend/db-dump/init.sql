@@ -122,6 +122,10 @@ CREATE TABLE IF NOT EXISTS article_ratings(
 	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) COMMENT '文章评分表';
 
+-- 插入默认用户数据
+INSERT INTO users (nickname, email, password, avatar) VALUES 
+('PlankBevelen', 'admin@plankbevelen.com', '$2b$10$example.hash.password', '"/uploads/avatars/admin.jpg"');
+
 -- 插入默认分类数据
 INSERT INTO article_categories (name) VALUES 
 ('工程化'),
@@ -130,20 +134,16 @@ INSERT INTO article_categories (name) VALUES
 ('学习笔记'),
 ('旅游');
 
--- 插入默认标签数据
-INSERT INTO article_tags (name, color) VALUES 
-('Vue.js', '#4FC08D'),
-('React', '#61DAFB'),
-('JavaScript', '#F7DF1E'),
-('TypeScript', '#3178C6'),
-('Node.js', '#339933'),
-('CSS', '#1572B6'),
-('HTML', '#E34F26'),
-('前端', '#409EFF'),
-('后端', '#67C23A'),
-('全栈', '#E6A23C'),
-('数据库', '#F56C6C'),
-('算法', '#909399');
+-- 插入测试文章数据
+INSERT INTO articles (title, summary, content, cover, category_id, user_id, views_count, comments_count, average_score, status, is_top, tags) VALUES 
+('Vue 3 Composition API 深度解析', 'Vue 3 带来了全新的 Composition API，让我们能够更好地组织和复用代码逻辑。本文将深入探讨 Composition API 的使用方法和最佳实践。', '# Vue 3 Composition API 深度解析\n\nVue 3 的 Composition API 是一个重大的更新...', '"/uploads/covers/vue3-composition.jpg"', 2, 1, 1250, 15, 4.8, 'published', TRUE, '["Vue.js", "前端", "JavaScript"]'),
+('现代前端工程化实践指南', '从零开始构建一个现代化的前端工程，包括项目架构、构建工具、代码规范、自动化部署等方面的最佳实践。', '# 现代前端工程化实践指南\n\n在现代前端开发中，工程化是必不可少的...', '"/uploads/covers/frontend-engineering.jpg"', 1, 1, 980, 12, 4.6, 'published', TRUE, '["工程化", "前端", "构建工具"]'),
+('TypeScript 进阶技巧与实战', 'TypeScript 作为 JavaScript 的超集，为前端开发带来了强类型支持。本文分享一些 TypeScript 的进阶使用技巧。', '# TypeScript 进阶技巧与实战\n\nTypeScript 的类型系统非常强大...', '"/uploads/covers/typescript-advanced.jpg"', 2, 1, 756, 8, 4.5, 'published', TRUE, '["TypeScript", "前端", "JavaScript"]'),
+('Node.js 性能优化实战', '深入探讨 Node.js 应用的性能优化策略，包括内存管理、异步处理、数据库优化等方面的实践经验。', '# Node.js 性能优化实战\n\n性能优化是 Node.js 应用开发中的重要环节...', '"/uploads/covers/nodejs-performance.jpg"', 1, 1, 642, 6, 4.4, 'published', TRUE, '["Node.js", "后端", "性能优化"]'),
+('React Hooks 最佳实践', 'React Hooks 改变了我们编写 React 组件的方式。本文总结了 Hooks 使用的最佳实践和常见陷阱。', '# React Hooks 最佳实践\n\nReact Hooks 让函数组件拥有了状态管理能力...', '"/uploads/covers/react-hooks.jpg"', 2, 1, 534, 4, 4.3, 'published', TRUE, '["React", "前端", "JavaScript"]'),
+('CSS Grid 布局完全指南', 'CSS Grid 是现代 CSS 布局的强大工具。本文将全面介绍 Grid 布局的使用方法和实际应用场景。', '# CSS Grid 布局完全指南\n\nCSS Grid 提供了二维布局能力...', '"/uploads/covers/css-grid.jpg"', 2, 1, 423, 3, 4.2, 'published', TRUE, '["CSS", "前端", "布局"]'),
+('JavaScript 异步编程深入理解', '从回调函数到 Promise，再到 async/await，深入理解 JavaScript 异步编程的演进和最佳实践。', '# JavaScript 异步编程深入理解\n\n异步编程是 JavaScript 的核心特性...', '"/uploads/covers/js-async.jpg"', 2, 1, 367, 2, 4.1, 'published', TRUE, '["JavaScript", "前端", "异步编程"]'),
+('前端性能优化全面指南', '从加载优化到运行时优化，全面介绍前端性能优化的策略和技巧，让你的网站飞起来。', '# 前端性能优化全面指南\n\n性能优化是前端开发的永恒话题...', '"/uploads/covers/frontend-performance.jpg"', 2, 1, 289, 1, 4.0, 'published', TRUE, '["前端", "性能优化", "JavaScript"]');
 
 -- 相册表
 CREATE TABLE IF NOT EXISTS albums(
