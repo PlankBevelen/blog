@@ -18,7 +18,6 @@ photoRouter.post('/list', async (req, res) => {
 photoRouter.post('/upload', async (req, res) => {
     const { album_id, photos } = req.body;
     try {
-        console.log(album_id, photos.length)
         const PhotoRes = await photoService.uploadPhotos({
             album_id,
             photos,

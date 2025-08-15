@@ -1,7 +1,7 @@
 <template>
     <div class="top-banner" :style="{ height: height, backgroundImage: `url(${imagePath})`}">
         <span class="title"> {{ title }} </span>
-        <canvas ref="canvasRef" class="wave"></canvas>
+        <canvas ref="canvasRef" class="wave" v-show="waveVisible"></canvas>
         <slot></slot>
     </div>
 </template>
@@ -22,6 +22,10 @@ const props = defineProps({
     height: {
         type: String,
         default: '100vh'
+    },
+    waveVisible : {
+        type: Boolean,
+        default: true
     }
 });
 

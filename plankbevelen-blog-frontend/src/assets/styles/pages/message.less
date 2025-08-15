@@ -1,0 +1,66 @@
+
+.top-banner {
+    z-index: 10;
+    position: relative;
+}
+
+.messages-canvas {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 10vh;
+    width: 100%;
+    height: 80vh;
+    z-index: 1000;
+    cursor: pointer;
+}
+
+.messageBox {
+    position: absolute;
+    top: 55%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 2s ease-out; 
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    z-index: 1000;
+
+    .el-input {
+        animation: slideInFromRight 0.5s ease-out;
+        transform-origin: right center;
+        min-width: 300px;
+
+        :deep(&__inner) {
+            width: 220px;
+        }
+    }
+
+    .send-icon-box {
+        transition: all 0.3s ease;
+        padding: 10px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.9);
+        cursor: pointer;
+        
+        &:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: scale(1.1);
+        }
+    }
+}
+
+@keyframes slideInFromRight {
+    0% {
+        opacity: 0;
+        transform: translateX(20px) scaleX(0.8);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0) scaleX(1);
+    }
+}
+
+// Canvas动画不需要CSS keyframes，所有动画逻辑都在JavaScript中处理

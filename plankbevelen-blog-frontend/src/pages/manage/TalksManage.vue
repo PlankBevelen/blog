@@ -153,11 +153,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
-import talkService from '@/services/talk.service'
 import { useUserStore } from '@/stores/user'
+import { useTalkStore } from '@/stores/talk'
 import type { TalkEntity, TalkCreateRequest } from '@/types/talk'
 
 const userStore = useUserStore()
+const talkStore = useTalkStore()
 const loading = ref(false)
 const submitting = ref(false)
 const searchText = ref('')
@@ -257,46 +258,24 @@ const handleSubmit = async () => {
         submitting.value = true
         if( isEdit.value ) {
             // 更新
-            const res = await talkService.update(editingId.value as number, talkForm.value as TalkCreateRequest)
-            if(res.status === 200) {
+            const success = await talkStore.updateTalk(editingId.value as number, talkForm.value as TalkCreateRequest)
+            if(success) {
                 ElMessage.success('说说更新成功')
-                // 更新本地数据
-                const index = talks.value.findIndex(talk => talk.id === editingId.value)
-                if (index > -1) {
-                    talks.value[index] = {
-                        ...talks.value[index],
-                        ...talkForm.value
-                    }
-                }
+                // 重新获取数据
+                await fetchTalks()
                 resetForm()
                 dialogVisible.value = false
-                loading.value = false
+            } else {
+                ElMessage.error('更新失败')
             }
         } else {
             // 发布
-            const res = await talkService.create(talkForm.value as TalkCreateRequest)
+            const success = await talkStore.createTalk(talkForm.value as TalkCreateRequest)
 
-            if(res.status === 200) {
+            if(success) {
                 ElMessage.success('说说发布成功')
-                
-                // 创建新的说说对象
-                const newTalk: TalkEntity = {
-                    id: res.data.insertId,
-                    user_id: userStore.userInfo?.id || 0,
-                    content: talkForm.value.content,
-                    images: [...talkForm.value.images],
-                    create_at: new Date().toISOString(),
-                    status: talkForm.value.status,
-                    likes_count: 0,
-                    comments_count: 0,
-                    nickname: userStore.userInfo?.nickname || '',
-                    avatar: userStore.userInfo?.avatar || ''
-                }
-                
-                // 添加到说说列表的开头
-                talks.value.unshift(newTalk)
-                total.value = talks.value.length
-                
+                // 重新获取数据
+                await fetchTalks()
                 resetForm()
                 dialogVisible.value = false
             } else {
@@ -324,16 +303,13 @@ const handleDelete = async (row: any) => {
         )
 
         // 调用删除接口
-        const res = await talkService.delete(row.id as number)
-        if(res.status === 200) {
+        const success = await talkStore.deleteTalk(row.id as number)
+        if(success) {
             // 从本地数据中删除
             const index = talks.value.findIndex(talk => talk.id === row.id)
             if (index > -1) {
                 talks.value.splice(index, 1)
                 total.value = talks.value.length
-            } else {
-                ElMessage.error('删除失败')
-                return
             }
             ElMessage.success('删除成功')
         } else {
@@ -348,11 +324,9 @@ const handleDelete = async (row: any) => {
 async function fetchTalks() {
     try {
         loading.value = true
-        const res = await talkService.getAll()
-        if(res.status === 200) {
-            talks.value = res.data
-            total.value = res.data.length
-        }
+        const data = await talkStore.fetchAllTalks()
+        talks.value = data
+        total.value = data.length
     } catch (error) {
         console.error('获取说说失败:', error)
     } finally {

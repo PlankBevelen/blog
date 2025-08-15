@@ -33,7 +33,7 @@
       </div>
       <div class="action-item" @click="handleComment" >
         <svg-icon name="comment" color="var(--talk-color)"/>
-        <span>{{ commentCount }}</span>
+        <span>{{ commentCount || 0 }}</span>
       </div>
     </div>
     
@@ -50,17 +50,21 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import type { TalkEntity } from '@/types/talk'
-import talkService from '@/services/talk.service';
 import CommentSection from './CommentSection.vue'
 import { formatDate, formatDatetime } from '@/utils/format';
 import { useUserStore } from '@/stores/user';
+import { useTalkStore } from '@/stores/talk';
 
 interface Props {
   talk: TalkEntity
 }
 
 const props = defineProps<Props>()
+const emit = defineEmits<{
+  commentCountChanged: [oldCount: number, newCount: number]
+}>()
 const userStore = useUserStore()
+const talkStore = useTalkStore()
 
 const isLiked = ref(false)
 // 评论显示状态
@@ -72,7 +76,7 @@ const commentCount = ref(props.talk.comments_count || 0)
 const isLiking = ref(false)
 
 // 点赞处理
-const handleLike = () => {
+const handleLike = async () => {
   // 节流控制，防止频繁点击
   if (isLiking.value) {
     return
@@ -81,24 +85,19 @@ const handleLike = () => {
   isLiking.value = true
   
   // 调用toggle接口切换点赞状态
-  talkService.toggle(props.talk.id, isLiked.value ? 'unlike' : 'like').then(res => {
-    console.log(res)
+  const success = await talkStore.toggleLike(props.talk.id, isLiked.value ? 'unlike' : 'like')
+  if (success) {
     // 切换点赞状态
     isLiked.value = !isLiked.value
-    // 更新点赞数量
-    if (isLiked.value) {
-      props.talk.likes_count += 1
-    } else {
-      props.talk.likes_count -= 1
-    }
-  }).catch(err => {
-    console.error('点赞操作失败:', err)
-  }).finally(() => {
-    // 500ms后解除节流
-    setTimeout(() => {
-      isLiking.value = false
-    }, 500)
-  })
+    // 点赞数量已在store中更新，无需手动更新
+  } else {
+    console.error('点赞操作失败')
+  }
+  
+  // 500ms后解除节流
+  setTimeout(() => {
+    isLiking.value = false
+  }, 500)
 }
 
 // 评论处理
@@ -108,7 +107,10 @@ const handleComment = () => {
 
 // 更新评论数量
 const updateCommentCount = (count: number) => {
+  const oldCount = commentCount.value
   commentCount.value = count
+  // 通知父组件评论数量变化
+  emit('commentCountChanged', oldCount, count)
 }
 
 // 获取用户点赞状态
@@ -118,10 +120,8 @@ const fetchLikeStatus = async () => {
   }
   
   try {
-    const res = await talkService.getLikeStatus(props.talk.id)
-    if (res.status === 200) {
-      isLiked.value = res.data.isLiked
-    }
+    const liked = await talkStore.fetchLikeStatus(props.talk.id)
+    isLiked.value = liked
   } catch (error) {
     console.error('获取点赞状态失败:', error)
   }

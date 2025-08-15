@@ -35,7 +35,7 @@
             </div>
 
             <div class="talk-list">
-                <div v-if="loading" class="loading">
+                <div v-if="talkStore.loading" class="loading">
                     <el-skeleton v-for="n in 3" :key="n" animated>
                         <template #template>
                             <div class="skeleton-talk">
@@ -60,6 +60,7 @@
                         v-for="talk in paginatedTalks" 
                         :key="talk.id" 
                         :talk="talk" 
+                        @comment-count-changed="handleCommentCountChange"
                     />
                     
                     <div v-if="totalCount > pageSize" class="pagination">
@@ -83,15 +84,17 @@ import TalkCard from '@/components/talk/TalkCard.vue'
 import talkImage from '@/assets/images/talk.jpg'
 import { ref, onMounted, computed } from 'vue'
 import { useTransition } from '@vueuse/core'
-import TalkService from '@/services/talk.service'
 import type { TalkEntity } from '@/types/talk'
 import { ElMessage } from 'element-plus'
+import { useTalkStore } from '@/stores/talk'
 
 const imagePath = talkImage;    
 const title = '说说'
 
+// 使用talk store
+const talkStore = useTalkStore()
+
 // 数据状态
-const loading = ref(false)
 const talks = ref<TalkEntity[]>([])
 const curPage = ref(1)
 const pageSize = ref(10)
@@ -115,9 +118,8 @@ const paginatedTalks = computed(() => {
 // 获取已发布的说说
 const fetchPublishedTalks = async () => {
   try {
-    loading.value = true
-    const response = await TalkService.getPublished()
-    talks.value = response.data || []
+    const data = await talkStore.fetchPublishedTalks()
+    talks.value = data || []
     totalCount.value = talks.value.length
     
     // 更新统计数据
@@ -127,9 +129,13 @@ const fetchPublishedTalks = async () => {
   } catch (error) {
     console.error('获取说说失败:', error)
     ElMessage.error('获取说说失败')
-  } finally {
-    loading.value = false
   }
+}
+
+// 处理评论数量变化
+const handleCommentCountChange = (oldCount: number, newCount: number) => {
+  const diff = newCount - oldCount
+  commentCount.value += diff
 }
 
 // 分页处理

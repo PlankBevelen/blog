@@ -59,9 +59,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import TalkService from '@/services/talk.service'
 import CommentItem from './CommentItem.vue'
 import { useUserStore } from '@/stores/user'
+import { useTalkStore } from '@/stores/talk'
 import type { Comment } from '@/types/talk'
 
 interface Props {
@@ -74,6 +74,7 @@ const emit = defineEmits<{
 }>()
 
 const userStore = useUserStore()
+const talkStore = useTalkStore()
 const comments = ref<Comment[]>([])
 const newComment = ref('')
 const loading = ref(false)
@@ -123,8 +124,8 @@ const getAllReplies = (parentId: number): Comment[] => {
 const loadComments = async () => {
   loading.value = true
   try {
-    const response = await TalkService.getComments(props.talkId)
-    comments.value = response.data
+    const data = await talkStore.fetchComments(props.talkId)
+    comments.value = data
   } catch (error) {
     console.error('加载评论失败:', error)
     ElMessage.error('加载评论失败')
@@ -141,11 +142,11 @@ const submitComment = async () => {
   const commentContent = newComment.value.trim()
   
   try {
-    const response = await TalkService.addComment(props.talkId, commentContent)
+    const response = await talkStore.addComment(props.talkId, commentContent)
     
     // 乐观更新：直接在本地添加新评论，避免重新加载
     const newCommentObj = {
-      id: response.data.id,
+      id: response.id,
       talk_id: props.talkId,
       user_id: userStore.userInfo?.id || 0,
       content: commentContent,
@@ -172,7 +173,7 @@ const submitComment = async () => {
 // 处理回复
 const handleReply = async (parentComment: Comment, content: string) => {
   try {
-    const response = await TalkService.addComment(
+    const response = await talkStore.addComment(
       props.talkId, 
       content, 
       parentComment.id, 
@@ -181,7 +182,7 @@ const handleReply = async (parentComment: Comment, content: string) => {
     
     // 乐观更新：直接在本地添加新回复，避免重新加载
     const newReplyObj = {
-      id: response.data.id,
+      id: response.id,
       talk_id: props.talkId,
       user_id: userStore.userInfo?.id || 0,
       content: content,
@@ -205,7 +206,7 @@ const handleReply = async (parentComment: Comment, content: string) => {
 // 处理删除
 const handleDelete = async (commentId: number) => {
   try {
-    await TalkService.deleteComment(props.talkId, commentId)
+    await talkStore.deleteComment(props.talkId, commentId)
     
     // 乐观更新：直接从本地状态中移除评论和相关回复，避免重新加载
     const removeCommentAndReplies = (id: number) => {

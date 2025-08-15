@@ -8,8 +8,6 @@ const talkRouter = express.Router();
 talkRouter.post('/all', async (req, res) => {
     try {
         const talks = await talkService.getAll();
-        console.log(talks);
-
         res.status(200).json(talks);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -57,7 +55,6 @@ talkRouter.delete('/delete/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
         const deletedTalk = await talkService.delete(Number(id));
-        console.log(deletedTalk);
         res.status(200).json(deletedTalk);
     } catch (error) {
         res.status(500).json({ message: error.message });
